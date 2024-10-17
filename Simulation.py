@@ -1,12 +1,11 @@
 import random
 import matplotlib.pyplot as plt
-from Agent import Agent  # Agent sınıfını import ediyoruz
-
+from Agent import Agent
 
 class Simulation:
-    def __init__(self, num_agents, num_steps, temperature=1.0):
+    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1):
         self.num_agents = num_agents
-        self.agents = [Agent(i, temperature) for i in range(num_agents)]
+        self.agents = [Agent(i, alpha, gamma, epsilon) for i in range(num_agents)]
         self.num_steps = num_steps
         self.scores_history = [[] for _ in range(num_agents)]
 
@@ -30,8 +29,8 @@ class Simulation:
                 agent1 = self.agents[agent_indices[i]]
                 agent2 = self.agents[agent_indices[i + 1]]
 
-                action1 = agent1.boltzmann()
-                action2 = agent2.boltzmann()
+                action1 = agent1.choose_action()
+                action2 = agent2.choose_action()
 
                 if action1 == 'A':
                     self.total_A_count += 1
@@ -52,24 +51,26 @@ class Simulation:
                 elif action1 == 'B' and action2 == 'A':
                     count_BA += 1
 
+                # Aksiyonlar eşitse, ödül +1, değilse -1
                 if action1 == action2:
-                    agent1.update_score(action1, 1)
-                    agent2.update_score(action2, 1)
+                    reward1 = 1
+                    reward2 = 1
                 else:
-                    agent1.update_score(action1, -1)
-                    agent2.update_score(action2, -1)
+                    reward1 = -1
+                    reward2 = -1
 
-                self.scores_history[agent1.agent_id].append(agent1.total_score)
-                self.scores_history[agent2.agent_id].append(agent2.total_score)
+                agent1.update_q_value(action1, reward1)
+                agent2.update_q_value(action2, reward2)
 
-            # Her iterasyondaki aksiyon kombinasyonlarını kaydet
+                self.scores_history[agent1.agent_id].append(agent1.get_total_q_value())
+                self.scores_history[agent2.agent_id].append(agent2.get_total_q_value())
+
             self.action_combinations['AA'].append(count_AA)
             self.action_combinations['BB'].append(count_BB)
             self.action_combinations['AB'].append(count_AB)
             self.action_combinations['BA'].append(count_BA)
 
     def plot_action_combinations(self):
-        # Aksiyon kombinasyonları için grafiği çiz
         plt.plot(self.action_combinations['AA'], label='Both A')
         plt.plot(self.action_combinations['BB'], label='Both B')
         plt.plot(self.action_combinations['AB'], label='A vs B')
