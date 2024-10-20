@@ -24,8 +24,8 @@ class Simulation:
                 agent1 = self.agents[agent_indices[i]]
                 agent2 = self.agents[agent_indices[i + 1]]
 
-                action1 = agent1.choose_action_boltzmann()
-                action2 = agent2.choose_action_boltzmann()
+                action1 = agent1.choose_action_boltzmann(step)
+                action2 = agent2.choose_action_boltzmann(step)
 
                 self._update_action_counts(action1, action2)
 
