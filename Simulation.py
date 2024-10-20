@@ -2,10 +2,11 @@ import random
 import matplotlib.pyplot as plt
 from Agent import Agent
 import numpy as np
+import networkx as nx
 
 
 class Simulation:
-    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=1.0):
+    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=1.0, topology_type = "toroidal" ):
         self.num_agents = num_agents
         self.num_steps = num_steps
         self.agents = [Agent(i, alpha, gamma, epsilon, temperature) for i in range(num_agents)]
@@ -14,6 +15,8 @@ class Simulation:
         self.total_A_count = 0
         self.total_B_count = 0
 
+        self.topology_type = topology_type
+
         # Grid dimensions
         self.grid_width = int(np.sqrt(self.num_agents))
         self.grid_height = self.grid_width
@@ -21,12 +24,18 @@ class Simulation:
         # Ensure total agents fit into grid
         assert self.grid_width * self.grid_height == self.num_agents, "Number of agents must be a perfect square."
 
+        if self.topology_type == 'scale-free':
+            self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)  # 2 edges added for each new node
+
     def run(self):
         """Run the simulation for a specified number of steps."""
         for step in range(self.num_steps):
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
-            pairs = self.form_pairs_with_toroidal_topology(step)
+            if self.topology_type == 'toroidal':
+                pairs = self.form_pairs_with_toroidal_topology(step)
+            elif self.topology_type == 'scale-free':
+                pairs = self.form_pairs_with_scale_free_topology()
 
             for agent1_id, agent2_id in pairs:
                 agent1 = self.agents[agent1_id]
@@ -92,6 +101,12 @@ class Simulation:
                     agent2_id = ((row - 1) % self.grid_height) * self.grid_width + col
                     pairs.append((agent1_id, agent2_id))
 
+        return pairs
+
+    def form_pairs_with_scale_free_topology(self):
+        """Form pairs of agents based on a scale-free network."""
+        edges = list(self.scale_free_graph.edges)
+        pairs = random.sample(edges, len(edges))
         return pairs
 
     def _update_action_counts(self, action1, action2):
