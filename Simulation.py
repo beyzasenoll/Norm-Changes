@@ -1,6 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 from Agent import Agent
+import numpy as np
 
 
 class Simulation:
@@ -13,16 +14,23 @@ class Simulation:
         self.total_A_count = 0
         self.total_B_count = 0
 
+        # Grid dimensions
+        self.grid_width = int(np.sqrt(self.num_agents))
+        self.grid_height = self.grid_width
+
+        # Ensure total agents fit into grid
+        assert self.grid_width * self.grid_height == self.num_agents, "Number of agents must be a perfect square."
+
     def run(self):
         """Run the simulation for a specified number of steps."""
         for step in range(self.num_steps):
-            agent_indices = list(range(self.num_agents))
-            random.shuffle(agent_indices)
-
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
-            for i in range(0, self.num_agents, 2):
-                agent1 = self.agents[agent_indices[i]]
-                agent2 = self.agents[agent_indices[i + 1]]
+
+            pairs = self.form_pairs_with_toroidal_topology(step)
+
+            for agent1_id, agent2_id in pairs:
+                agent1 = self.agents[agent1_id]
+                agent2 = self.agents[agent2_id]
 
                 action1 = agent1.choose_action_boltzmann(step)
                 action2 = agent2.choose_action_boltzmann(step)
@@ -47,6 +55,44 @@ class Simulation:
                 self.scores_history[agent2.agent_id].append(agent2.get_total_q_value())
 
             self._update_action_combinations(count_AA, count_BB, count_AB, count_BA)
+
+    def form_pairs_with_toroidal_topology(self, episode):
+        """Form pairs of agents based on toroidal grid topology."""
+        pairs = []
+
+        if episode % 4 == 0:
+            # Right neighbor
+            for row in range(self.grid_height):
+                for col in range(0, self.grid_width, 2):
+                    agent1_id = row * self.grid_width + col
+                    agent2_id = row * self.grid_width + (col + 1) % self.grid_width
+                    pairs.append((agent1_id, agent2_id))
+
+        elif episode % 4 == 1:
+            # Left neighbor
+            for row in range(self.grid_height):
+                for col in range(0, self.grid_width, 2):
+                    agent1_id = row * self.grid_width + col
+                    agent2_id = row * self.grid_width + (col - 1) % self.grid_width
+                    pairs.append((agent1_id, agent2_id))
+
+        elif episode % 4 == 2:
+            # Below neighbor
+            for col in range(self.grid_width):
+                for row in range(0, self.grid_height, 2):
+                    agent1_id = row * self.grid_width + col
+                    agent2_id = ((row + 1) % self.grid_height) * self.grid_width + col
+                    pairs.append((agent1_id, agent2_id))
+
+        else:
+            # Above neighbor
+            for col in range(self.grid_width):
+                for row in range(0, self.grid_height, 2):
+                    agent1_id = row * self.grid_width + col
+                    agent2_id = ((row - 1) % self.grid_height) * self.grid_width + col
+                    pairs.append((agent1_id, agent2_id))
+
+        return pairs
 
     def _update_action_counts(self, action1, action2):
         """Update the total count of 'A' and 'B' actions."""
