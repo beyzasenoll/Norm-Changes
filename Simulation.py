@@ -6,26 +6,22 @@ import networkx as nx
 
 
 class Simulation:
-    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=1.0, topology_type = "toroidal" ):
+    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=1.0,
+                 topology_type="toroidal"):
         self.num_agents = num_agents
         self.num_steps = num_steps
         self.agents = [Agent(i, alpha, gamma, epsilon, temperature) for i in range(num_agents)]
         self.scores_history = [[] for _ in range(num_agents)]
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
-        self.total_A_count = 0
-        self.total_B_count = 0
-
         self.topology_type = topology_type
 
-        # Grid dimensions
         self.grid_width = int(np.sqrt(self.num_agents))
         self.grid_height = self.grid_width
 
-        # Ensure total agents fit into grid
         assert self.grid_width * self.grid_height == self.num_agents, "Number of agents must be a perfect square."
 
         if self.topology_type == 'scale-free':
-            self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)  # 2 edges added for each new node
+            self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
 
     def run(self):
         """Run the simulation for a specified number of steps."""
@@ -43,8 +39,6 @@ class Simulation:
 
                 action1 = agent1.choose_action_boltzmann(step)
                 action2 = agent2.choose_action_boltzmann(step)
-
-                self._update_action_counts(action1, action2)
 
                 if action1 == 'A' and action2 == 'A':
                     count_AA += 1
@@ -68,6 +62,7 @@ class Simulation:
     def form_pairs_with_toroidal_topology(self, episode):
         """Form pairs of agents based on toroidal grid topology."""
         pairs = []
+
 
         if episode % 4 == 0:
             # Right neighbor
@@ -104,22 +99,24 @@ class Simulation:
         return pairs
 
     def form_pairs_with_scale_free_topology(self):
-        """Form pairs of agents based on a scale-free network."""
         edges = list(self.scale_free_graph.edges)
-        pairs = random.sample(edges, len(edges))
+
+        random.shuffle(edges)
+
+        paired_agents = set()
+        pairs = []
+
+        for edge in edges:
+            agent1_id, agent2_id = edge
+            if agent1_id not in paired_agents and agent2_id not in paired_agents:
+                pairs.append((agent1_id, agent2_id))
+                paired_agents.add(agent1_id)
+                paired_agents.add(agent2_id)
+
+            if len(paired_agents) >= self.num_agents:
+                break
+
         return pairs
-
-    def _update_action_counts(self, action1, action2):
-        """Update the total count of 'A' and 'B' actions."""
-        if action1 == 'A':
-            self.total_A_count += 1
-        else:
-            self.total_B_count += 1
-
-        if action2 == 'A':
-            self.total_A_count += 1
-        else:
-            self.total_B_count += 1
 
     def _calculate_rewards(self, action1, action2):
         """Calculate rewards based on actions."""
@@ -146,8 +143,3 @@ class Simulation:
         plt.title('Action Combinations Over Time')
         plt.legend()
         plt.show()
-
-    def print_action_counts(self):
-        """Print the total count of 'A' and 'B' actions."""
-        print(f"Total A selections: {self.total_A_count}")
-        print(f"Total B selections: {self.total_B_count}")
