@@ -63,7 +63,6 @@ class Simulation:
         """Form pairs of agents based on toroidal grid topology."""
         pairs = []
 
-
         if episode % 4 == 0:
             # Right neighbor
             for row in range(self.grid_height):
@@ -133,6 +132,8 @@ class Simulation:
 
     def plot_action_combinations(self):
         """Plot the frequencies of different action combinations over time."""
+        plt.figure(figsize=(6, 4))
+
         plt.plot(self.action_combinations['AA'], label='Both A')
         plt.plot(self.action_combinations['BB'], label='Both B')
         plt.plot(self.action_combinations['AB'], label='A vs B')
@@ -142,4 +143,20 @@ class Simulation:
         plt.ylabel('Frequency')
         plt.title('Action Combinations Over Time')
         plt.legend()
+        plt.show()
+
+    def plot_q_values(self):
+        """Plot the evolution of total Q-values for all agents over time."""
+        plt.figure(figsize=(8, 6))
+
+        # Plot Q-value evolution
+        for agent_id in range(self.num_agents):
+            plt.plot(self.scores_history[agent_id], label=f'Agent {agent_id}' if agent_id < 5 else "", alpha=0.6)
+
+        plt.xlabel('Step')
+        plt.ylabel('Total Q-value')
+        plt.title('Total Q-values of Agents Over Time')
+
+        plt.legend()
+        plt.tight_layout()
         plt.show()
