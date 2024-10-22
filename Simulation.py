@@ -6,19 +6,19 @@ import networkx as nx
 
 
 class Simulation:
-    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=1.0,
+    def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=100,
                  topology_type="toroidal"):
         self.num_agents = num_agents
         self.num_steps = num_steps
         self.agents = [Agent(i, alpha, gamma, epsilon, temperature) for i in range(num_agents)]
-        self.scores_history = [[] for _ in range(num_agents)]
+        self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.topology_type = topology_type
+        self.temperature=temperature
 
-        self.grid_width = int(np.sqrt(self.num_agents))
-        self.grid_height = self.grid_width
 
-        assert self.grid_width * self.grid_height == self.num_agents, "Number of agents must be a perfect square."
+        self.grid_width = 4
+        self.grid_height = int (self.num_agents / self.grid_width)
 
         if self.topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
@@ -54,8 +54,11 @@ class Simulation:
                 agent1.update_q_value(action1, reward1)
                 agent2.update_q_value(action2, reward2)
 
-                self.scores_history[agent1.agent_id].append(agent1.get_total_q_value())
-                self.scores_history[agent2.agent_id].append(agent2.get_total_q_value())
+                self.scores_history[agent1.agent_id]['A'].append(agent1.q_values['A'])
+                self.scores_history[agent1.agent_id]['B'].append(agent1.q_values['B'])
+
+                self.scores_history[agent2.agent_id]['A'].append(agent2.q_values['A'])
+                self.scores_history[agent2.agent_id]['B'].append(agent2.q_values['B'])
 
             self._update_action_combinations(count_AA, count_BB, count_AB, count_BA)
 
@@ -146,17 +149,80 @@ class Simulation:
         plt.show()
 
     def plot_q_values(self):
-        """Plot the evolution of total Q-values for all agents over time."""
+        """Plot the evolution of average Q-values for actions 'A' and 'B' over time for all agents."""
         plt.figure(figsize=(8, 6))
 
-        # Plot Q-value evolution
-        for agent_id in range(self.num_agents):
-            plt.plot(self.scores_history[agent_id], label=f'Agent {agent_id}' if agent_id < 5 else "", alpha=0.6)
+        num_timesteps = len(self.scores_history[0]['A'])
 
-        plt.xlabel('Step')
-        plt.ylabel('Total Q-value')
-        plt.title('Total Q-values of Agents Over Time')
+        avg_qval_A = []
+        avg_qval_B = []
+
+        # Loop through each timestep
+        for t in range(num_timesteps):
+            sum_qval_A = 0
+            sum_qval_B = 0
+
+            for agent_id in range(self.num_agents):
+                sum_qval_A += self.scores_history[agent_id]['A'][t]
+                sum_qval_B += self.scores_history[agent_id]['B'][t]
+
+            avg_qval_A.append(sum_qval_A / self.num_agents)
+            avg_qval_B.append(sum_qval_B / self.num_agents)
+
+        plt.plot(avg_qval_A, label='Average Q-value for Action A', color='blue')
+        plt.plot(avg_qval_B, label='Average Q-value for Action B', color='orange')
+
+        plt.xlabel('Timestep')
+        plt.ylabel('Average Q-value')
+        plt.title('Average Q-values for Actions A and B Over Time')
 
         plt.legend()
+
         plt.tight_layout()
         plt.show()
+
+    def run_multiple_simulations(self, num_simulations=20):
+        """Run multiple simulations and track whether 'AA' or 'BB' dominates."""
+        aa_wins = 0
+        bb_wins = 0
+
+        for sim in range(num_simulations):
+            self.run()
+
+            aa_count = 0
+            bb_count = 0
+
+            for agent_id in range(self.num_agents):
+                last_action = self.agents[agent_id].last_action
+
+                if last_action == 'A':
+                    aa_count += 1
+                elif last_action == 'B':
+                    bb_count += 1
+
+            if aa_count > bb_count:
+                aa_wins += 1
+            else:
+                bb_wins += 1
+
+            self.reset_simulation()
+
+        self.plot_aa_vs_bb_results(aa_wins, bb_wins)
+
+    def plot_aa_vs_bb_results(self, aa_wins, bb_wins):
+        """Plot the result of AA vs BB wins in the final timestep across multiple simulations."""
+        labels = ['AA Wins', 'BB Wins']
+        counts = [aa_wins, bb_wins]
+
+        plt.figure(figsize=(6, 4))
+        plt.bar(labels, counts, color=['blue', 'green'])
+        plt.xlabel('Action')
+        plt.ylabel('Number of Wins')
+        plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
+        plt.show()
+
+    def reset_simulation(self):
+        """Reset the simulation to run it again with the same agents."""
+        self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
+        self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
+        self. temperature = 100
