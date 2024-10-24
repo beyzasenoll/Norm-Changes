@@ -14,11 +14,15 @@ class Simulation:
         self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.topology_type = topology_type
-        self.temperature=temperature
+        self.temperature = temperature
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.temperature = temperature
 
 
         self.grid_width = 4
-        self.grid_height = int (self.num_agents / self.grid_width)
+        self.grid_height = int(self.num_agents / self.grid_width)
 
         if self.topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
@@ -225,4 +229,4 @@ class Simulation:
         """Reset the simulation to run it again with the same agents."""
         self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
-        self. temperature = 100
+        self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in range(self.num_agents)]
