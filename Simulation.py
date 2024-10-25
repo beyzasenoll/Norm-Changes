@@ -1,7 +1,6 @@
 import random
 import matplotlib.pyplot as plt
 from Agent import Agent
-import numpy as np
 import networkx as nx
 
 
@@ -19,6 +18,7 @@ class Simulation:
         self.gamma = gamma
         self.epsilon = epsilon
         self.temperature = temperature
+        self.pairs = []
 
 
         self.grid_width = 4
@@ -33,11 +33,11 @@ class Simulation:
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
             if self.topology_type == 'toroidal':
-                pairs = self.form_pairs_with_toroidal_topology(step)
+                self.pairs = self.form_pairs_with_toroidal_topology(step)
             elif self.topology_type == 'scale-free':
-                pairs = self.form_pairs_with_scale_free_topology()
+                self.pairs = self.form_pairs_with_scale_free_topology()
 
-            for agent1_id, agent2_id in pairs:
+            for agent1_id, agent2_id in self.pairs:
                 agent1 = self.agents[agent1_id]
                 agent2 = self.agents[agent2_id]
 
@@ -193,18 +193,22 @@ class Simulation:
         for sim in range(num_simulations):
             self.run()
 
-            aa_count = 0
-            bb_count = 0
+            count_AA = 0
+            count_BB = 0
 
-            for agent_id in range(self.num_agents):
-                last_action = self.agents[agent_id].last_action
+            for agent1_id, agent2_id in self.pairs:
+                agent1 = self.agents[agent1_id]
+                agent2 = self.agents[agent2_id]
+                last_action_1 = agent1.last_action
+                last_action_2 = agent2.last_action
 
-                if last_action == 'A':
-                    aa_count += 1
-                elif last_action == 'B':
-                    bb_count += 1
+                if last_action_1 == 'A' and last_action_2 == 'A':
+                    count_AA += 1
 
-            if aa_count > bb_count:
+                elif last_action_1 == 'B' and last_action_2 == 'B':
+                    count_BB += 1
+
+            if count_AA > count_BB:
                 aa_wins += 1
             else:
                 bb_wins += 1
