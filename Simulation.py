@@ -20,7 +20,6 @@ class Simulation:
         self.temperature = temperature
         self.pairs = []
 
-
         self.grid_width = 4
         self.grid_height = int(self.num_agents / self.grid_width)
 
@@ -33,9 +32,11 @@ class Simulation:
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
             if self.topology_type == 'toroidal':
-                self.pairs = self.form_pairs_with_toroidal_topology(step)
+                self.pairs = self._form_pairs_with_toroidal_topology(step)
             elif self.topology_type == 'scale-free':
-                self.pairs = self.form_pairs_with_scale_free_topology()
+                self.pairs = self._form_pairs_with_scale_free_topology()
+            elif self.topology_type == 'random':
+                self.pairs = self._form_pairs_randomly()
 
             for agent1_id, agent2_id in self.pairs:
                 agent1 = self.agents[agent1_id]
@@ -66,7 +67,7 @@ class Simulation:
 
             self._update_action_combinations(count_AA, count_BB, count_AB, count_BA)
 
-    def form_pairs_with_toroidal_topology(self, episode):
+    def _form_pairs_with_toroidal_topology(self, episode):
         """Form pairs of agents based on toroidal grid topology."""
         pairs = []
 
@@ -104,7 +105,7 @@ class Simulation:
 
         return pairs
 
-    def form_pairs_with_scale_free_topology(self):
+    def _form_pairs_with_scale_free_topology(self):
         edges = list(self.scale_free_graph.edges)
 
         random.shuffle(edges)
@@ -124,6 +125,13 @@ class Simulation:
 
         return pairs
 
+    def _form_pairs_randomly(self):
+        """Pair agents randomly for each timestep, returning agent indices."""
+        agent_indices = list(range(self.num_agents))
+        random.shuffle(agent_indices)
+        pairs = [(agent_indices[i], agent_indices[i + 1]) for i in range(0, len(agent_indices) - 1, 2)]
+        return pairs
+
     def _calculate_rewards(self, action1, action2):
         """Calculate rewards based on actions."""
         if action1 == action2:
@@ -136,6 +144,41 @@ class Simulation:
         self.action_combinations['BB'].append(count_BB)
         self.action_combinations['AB'].append(count_AB)
         self.action_combinations['BA'].append(count_BA)
+
+    def run_multiple_simulations(self, num_simulations=20):
+        """Run multiple simulations and track whether 'AA' or 'BB' dominates."""
+        aa_wins = 0
+        bb_wins = 0
+
+        for sim in range(num_simulations):
+            self.run()
+
+            count_A = 0
+            count_B = 0
+
+            for agent in range(self.num_agents):
+                agent = self.agents[agent]
+                last_action_1 = agent.last_action
+
+                if last_action_1 == 'A':
+                    count_A += 1
+
+                elif last_action_1 == 'B':
+                    count_B += 1
+            if count_A >= self.num_agents * 0.9:
+                aa_wins += 1
+            elif count_B >= self.num_agents * 0.9:
+                bb_wins += 1
+
+            self.reset_simulation()
+
+        self.plot_aa_vs_bb_results(aa_wins, bb_wins)
+
+    def reset_simulation(self):
+        """Reset the simulation to run it again with the same agents."""
+        self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
+        self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
+        self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in range(self.num_agents)]
 
     def plot_action_combinations(self):
         """Plot the frequencies of different action combinations over time."""
@@ -185,38 +228,6 @@ class Simulation:
         plt.tight_layout()
         plt.show()
 
-    def run_multiple_simulations(self, num_simulations=20):
-        """Run multiple simulations and track whether 'AA' or 'BB' dominates."""
-        aa_wins = 0
-        bb_wins = 0
-
-        for sim in range(num_simulations):
-            self.run()
-
-            count_AA = 0
-            count_BB = 0
-
-            for agent1_id, agent2_id in self.pairs:
-                agent1 = self.agents[agent1_id]
-                agent2 = self.agents[agent2_id]
-                last_action_1 = agent1.last_action
-                last_action_2 = agent2.last_action
-
-                if last_action_1 == 'A' and last_action_2 == 'A':
-                    count_AA += 1
-
-                elif last_action_1 == 'B' and last_action_2 == 'B':
-                    count_BB += 1
-
-            if count_AA > count_BB:
-                aa_wins += 1
-            else:
-                bb_wins += 1
-
-            self.reset_simulation()
-
-        self.plot_aa_vs_bb_results(aa_wins, bb_wins)
-
     def plot_aa_vs_bb_results(self, aa_wins, bb_wins):
         """Plot the result of AA vs BB wins in the final timestep across multiple simulations."""
         labels = ['AA Wins', 'BB Wins']
@@ -229,8 +240,22 @@ class Simulation:
         plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
         plt.show()
 
-    def reset_simulation(self):
-        """Reset the simulation to run it again with the same agents."""
-        self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
-        self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
-        self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in range(self.num_agents)]
+    def plot_agent_actions_graph(self):
+        """Plot a graph-grid showing agents' final actions with colors and IDs."""
+        G = nx.grid_2d_graph(self.grid_height, self.grid_width)
+        pos = {node: (node[1], -node[0]) for node in G.nodes()}
+
+        colors = []
+        labels = {}
+
+        for agent in self.agents:
+            color = 'blue' if agent.last_action == 'A' else 'red'
+            colors.append(color)
+            labels[(agent.agent_id // self.grid_width, agent.agent_id % self.grid_width)] = str(agent.agent_id)
+
+        plt.figure(figsize=(8, 6))
+        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels, node_size=500, font_size=10,
+                font_color='white', font_weight='bold')
+
+        plt.title('Final Actions of Agents (Blue: A, Red: B)')
+        plt.show()

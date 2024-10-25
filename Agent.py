@@ -3,7 +3,7 @@ import random
 
 
 class Agent:
-    def __init__(self, agent_id, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=100):
+    def __init__(self, agent_id, alpha=0.05, gamma=0.95, epsilon=0.1, temperature=100):
         self.agent_id = agent_id
         self.actions = ['A', 'B']
         self.q_values = {'A': 0.0, 'B': 0.0}
