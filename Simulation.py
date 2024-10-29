@@ -26,7 +26,24 @@ class Simulation:
         if self.topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
 
-    def run(self):
+    def run_with_emergence_check(self):
+        self.run_simulation()
+        if not self.check_norm_emergence():
+            print("Norm emergence sağlanamadı, B aksiyonunu seçen ajanların %10'unun Q-değerleri güncelleniyor...")
+            less_action = self.determine_less_norm_action()
+            self.update_non_emerging_agents_q_values(less_action)
+
+            self.keep_q_values()
+            self.reset_to_final_q_values()
+
+            self.run_simulation()
+
+            if self.check_norm_emergence():
+                print("Norm emergence tekrar çalıştırıldığında sağlandı.")
+            else:
+                print("Norm emergence tekrar çalıştırıldığında da sağlanamadı.")
+
+    def run_simulation(self):
         """Run the simulation for a specified number of steps."""
         for step in range(self.num_steps):
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
@@ -53,8 +70,10 @@ class Simulation:
                     count_AB += 1
                 elif action1 == 'B' and action2 == 'A':
                     count_BA += 1
-
-                reward1, reward2 = self._calculate_rewards(action1, action2)
+                if self.topology_type == 'random':
+                    reward1, reward2 = self._calculate_rewards(action1,action2) #_calculate_rewards_for_random_topology
+                else:
+                    reward1, reward2 = self._calculate_rewards(action1, action2)
 
                 agent1.update_q_value(action1, reward1)
                 agent2.update_q_value(action2, reward2)
@@ -66,6 +85,54 @@ class Simulation:
                 self.scores_history[agent2.agent_id]['B'].append(agent2.q_values['B'])
 
             self._update_action_combinations(count_AA, count_BB, count_AB, count_BA)
+
+        self.plot_action_combinations()
+        self.plot_q_values()
+        self.plot_agent_actions_graph()
+
+    def check_norm_emergence(self):
+        count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
+        count_B = self.num_agents - count_A
+
+        if count_A >= self.num_agents * 0.9 or count_B >= self.num_agents * 0.9:
+            return True
+        else:
+            return False
+
+    def determine_less_norm_action(self):
+        count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
+        count_B = self.num_agents - count_A
+
+        if count_A > count_B:
+            return 'B'
+        else:
+            return 'A'
+
+    def update_non_emerging_agents_q_values(self,action):
+        agents_choosing_action = [agent for agent in self.agents if agent.last_action == action]
+
+        # %10'luk bir dilimi seçelim
+        num_agents_to_update = int(len(agents_choosing_action) * 0.5)
+        agents_to_update = random.sample(agents_choosing_action, num_agents_to_update)
+        print("Agents choosing action", action, ":", [agent.agent_id for agent in agents_choosing_action])
+
+        for agent in agents_to_update:
+            if action == 'B':
+                agent.q_values['A'] = 1.0  # A aksiyonunu seçmeye teşvik etmek için Q-değerini yüksek yapıyoruz.
+                agent.q_values['B'] = -1.0  # B aksiyonunu seçmesini zorlaştırmak için Q-değerini düşük yapıyoruz.
+            else:
+                agent.q_values['B'] = 1.0
+                agent.q_values['A'] = -1.0
+    def keep_q_values(self):
+        for agent in self.agents:
+            agent.final_q_values = agent.q_values.copy()  # Q-değerlerinin son halini final_q_values'a kopyalar.
+            agent.fixed_q_values = True  # Q-değerlerinin sabitlendiğini belirtmek için bayrağı True yapar.
+
+    def reset_to_final_q_values(self):
+
+        for agent in self.agents:
+            if agent.final_q_values:
+                agent.q_values = agent.final_q_values.copy()  # Q-değerlerini final değerlerine geri döndürür.
 
     def _form_pairs_with_toroidal_topology(self, episode):
         """Form pairs of agents based on toroidal grid topology."""
@@ -138,6 +205,11 @@ class Simulation:
             return 1, 1
         return -1, -1
 
+    def _calculate_rewards_for_random_topology(self,action1,action2):
+        if action1 == action2:
+            return 0.5 , 0.5
+        return -1,-1
+
     def _update_action_combinations(self, count_AA, count_BB, count_AB, count_BA):
         """Track the action combinations over time."""
         self.action_combinations['AA'].append(count_AA)
@@ -151,7 +223,7 @@ class Simulation:
         bb_wins = 0
 
         for sim in range(num_simulations):
-            self.run()
+            self.run_simulation()
 
             count_A = 0
             count_B = 0
@@ -170,6 +242,7 @@ class Simulation:
             elif count_B >= self.num_agents * 0.9:
                 bb_wins += 1
 
+            print(sim)
             self.reset_simulation()
 
         self.plot_aa_vs_bb_results(aa_wins, bb_wins)
@@ -249,7 +322,7 @@ class Simulation:
         labels = {}
 
         for agent in self.agents:
-            color = 'blue' if agent.last_action == 'A' else 'red'
+            color = 'blue' if agent.last_action == 'A' else 'yellow'
             colors.append(color)
             labels[(agent.agent_id // self.grid_width, agent.agent_id % self.grid_width)] = str(agent.agent_id)
 

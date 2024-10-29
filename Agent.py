@@ -12,7 +12,7 @@ class Agent:
         self.epsilon = epsilon
         self.temperature = temperature
         self.last_action = None
-
+        self.final_q_values = None
 
     def choose_action_epsilon_greedy(self):
         """Epsilon-greedy action selection."""
@@ -28,13 +28,9 @@ class Agent:
         if self.temperature > 0.05:
             self.temperature *= 0.995  # Update temperature to decrease over time
         probabilities = exp_q_values / np.sum(exp_q_values)
-        if self.agent_id < 5 and timestep > 1000 and timestep < 1100:
-            print(timestep, self.agent_id, self.q_values.values(), probabilities)
 
-        self.last_action=np.random.choice(self.actions, p=probabilities)
-
+        self.last_action = np.random.choice(self.actions, p=probabilities)
         return np.random.choice(self.actions, p=probabilities)
-
 
     def update_q_value(self, action, reward):
         """Update Q-value based on the selected action and received reward."""
