@@ -19,6 +19,7 @@ class Simulation:
         self.epsilon = epsilon
         self.temperature = temperature
         self.pairs = []
+        self.norm_changed = False
 
         self.grid_width = 4
         self.grid_height = int(self.num_agents / self.grid_width)
@@ -29,7 +30,7 @@ class Simulation:
     def run_with_emergence_check(self):
         self.run_simulation()
         if not self.check_norm_emergence():
-            print("Norm emergence sağlanamadı, B aksiyonunu seçen ajanların %10'unun Q-değerleri güncelleniyor...")
+            print("Norm couldn't emerge")
             less_action = self.determine_less_norm_action()
             self.update_non_emerging_agents_q_values(less_action)
 
@@ -39,9 +40,17 @@ class Simulation:
             self.run_simulation()
 
             if self.check_norm_emergence():
-                print("Norm emergence tekrar çalıştırıldığında sağlandı.")
+                print("When we execute again, norm emerged.")
             else:
-                print("Norm emergence tekrar çalıştırıldığında da sağlanamadı.")
+                print("When we execute again, norm couldn't emerge.")
+
+        if self.topology_type == 'random':
+            self.norm_changed = True
+
+            self.keep_q_values()
+            self.reset_to_final_q_values()
+
+            self.run_simulation()
 
     def run_simulation(self):
         """Run the simulation for a specified number of steps."""
@@ -70,8 +79,8 @@ class Simulation:
                     count_AB += 1
                 elif action1 == 'B' and action2 == 'A':
                     count_BA += 1
-                if self.topology_type == 'random':
-                    reward1, reward2 = self._calculate_rewards(action1,action2) #_calculate_rewards_for_random_topology
+                if self.topology_type == 'random' and self.norm_changed:
+                    reward1, reward2 = self._calculate_rewards_for_random_topology(action1,action2)
                 else:
                     reward1, reward2 = self._calculate_rewards(action1, action2)
 
@@ -132,7 +141,7 @@ class Simulation:
 
         for agent in self.agents:
             if agent.final_q_values:
-                agent.q_values = agent.final_q_values.copy()  # Q-değerlerini final değerlerine geri döndürür.
+                agent.q_values = agent.final_q_values.copy()
 
     def _form_pairs_with_toroidal_topology(self, episode):
         """Form pairs of agents based on toroidal grid topology."""
@@ -206,6 +215,7 @@ class Simulation:
         return -1, -1
 
     def _calculate_rewards_for_random_topology(self,action1,action2):
+        """Calculate rewards for changing norm."""
         if action1 == action2:
             return 0.5 , 0.5
         return -1,-1
