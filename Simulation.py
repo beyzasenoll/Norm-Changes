@@ -80,7 +80,7 @@ class Simulation:
                 elif action1 == 'B' and action2 == 'A':
                     count_BA += 1
                 if self.topology_type == 'random' and self.norm_changed:
-                    reward1, reward2 = self._calculate_rewards_for_random_topology(action1,action2)
+                    reward1, reward2 = self._calculate_rewards_for_random_topology(action1, action2)
                 else:
                     reward1, reward2 = self._calculate_rewards(action1, action2)
 
@@ -117,25 +117,25 @@ class Simulation:
         else:
             return 'A'
 
-    def update_non_emerging_agents_q_values(self,action):
+    def update_non_emerging_agents_q_values(self, action):
         agents_choosing_action = [agent for agent in self.agents if agent.last_action == action]
 
-        # %10'luk bir dilimi seçelim
-        num_agents_to_update = int(len(agents_choosing_action) * 0.5)
+        num_agents_to_update = int(len(agents_choosing_action) * 0.3)
         agents_to_update = random.sample(agents_choosing_action, num_agents_to_update)
         print("Agents choosing action", action, ":", [agent.agent_id for agent in agents_choosing_action])
 
         for agent in agents_to_update:
             if action == 'B':
-                agent.q_values['A'] = 1.0  # A aksiyonunu seçmeye teşvik etmek için Q-değerini yüksek yapıyoruz.
-                agent.q_values['B'] = -1.0  # B aksiyonunu seçmesini zorlaştırmak için Q-değerini düşük yapıyoruz.
+                agent.q_values['A'] = 1.0
+                agent.q_values['B'] = -1.0
             else:
                 agent.q_values['B'] = 1.0
                 agent.q_values['A'] = -1.0
+
     def keep_q_values(self):
         for agent in self.agents:
-            agent.final_q_values = agent.q_values.copy()  # Q-değerlerinin son halini final_q_values'a kopyalar.
-            agent.fixed_q_values = True  # Q-değerlerinin sabitlendiğini belirtmek için bayrağı True yapar.
+            agent.final_q_values = agent.q_values.copy()
+            agent.fixed_q_values = True
 
     def reset_to_final_q_values(self):
 
@@ -214,11 +214,11 @@ class Simulation:
             return 1, 1
         return -1, -1
 
-    def _calculate_rewards_for_random_topology(self,action1,action2):
+    def _calculate_rewards_for_random_topology(self, action1, action2):
         """Calculate rewards for changing norm."""
         if action1 == action2:
-            return 0.5 , 0.5
-        return -1,-1
+            return 0.5, 0.5
+        return -1, -1
 
     def _update_action_combinations(self, count_AA, count_BB, count_AB, count_BA):
         """Track the action combinations over time."""
@@ -262,6 +262,39 @@ class Simulation:
         self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in range(self.num_agents)]
+
+    def simulation_different_agent_size(self):
+        agent_sizes = [40, 80, 120, 200]
+        norm_counts = []
+
+        for agent_size in agent_sizes:
+            self.num_agents = agent_size
+            self.grid_height = (self.num_agents + self.grid_width - 1) // self.grid_width  # Adjust grid height
+
+            self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in
+                           range(self.num_agents)]
+            self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]  # Reinitialize scores_history
+
+            self.run_with_emergence_check()
+
+            count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
+            count_B = self.num_agents - count_A
+
+            if count_A >= self.num_agents * 0.9:
+                norm_counts.append((count_A // agent_size) * 100)
+            elif count_B >= self.num_agents * 0.9:
+                norm_counts.append((count_B // agent_size) * 100)
+            else:
+                norm_counts.append(0)  # If no norm emerged
+
+            self.reset_simulation()
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(agent_sizes, norm_counts, marker='o')
+        plt.title("Norm Emergence Percentage")
+        plt.xlabel("Number of Agents")
+        plt.ylabel("Percentage Count of Dominant Action")
+        plt.show()
 
     def plot_action_combinations(self):
         """Plot the frequencies of different action combinations over time."""
