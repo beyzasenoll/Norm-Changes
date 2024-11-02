@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from Agent import Agent
 import networkx as nx
 
+from Reward import Reward
 from SimulationPlotter import SimulationPlotter
 from Topology import Topology
 
@@ -22,50 +23,25 @@ class Simulation:
         self.epsilon = epsilon
         self.temperature = temperature
         self.pairs = []
-        self.norm_changed = False
+        self.less_action= None
 
-        self.grid_width = 4
+        self.grid_width = 10
         self.grid_height = int(self.num_agents / self.grid_width)
 
         if self.topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
 
-    def run_with_emergence_check(self):
-        self.run_simulation()
-        if not self.check_norm_emergence():
-            print("Norm couldn't emerge")
-            less_action = self.determine_less_norm_action()
-            self.update_non_emerging_agents_q_values(less_action)
-
-            self.keep_q_values()
-            self.reset_to_final_q_values()
-
-            self.run_simulation()
-
-            if self.check_norm_emergence():
-                print("When we execute again, norm emerged.")
-            else:
-                print("When we execute again, norm couldn't emerge.")
-
-        if self.topology_type == 'random':
-            self.norm_changed = True
-
-            self.keep_q_values()
-            self.reset_to_final_q_values()
-
-            self.run_simulation()
-
-    def run_simulation(self):
+    def run_simulation(self, norm_change=False):
         """Run the simulation for a specified number of steps."""
         for step in range(self.num_steps):
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
             if self.topology_type == 'toroidal':
-                self.pairs = Topology._form_pairs_with_toroidal_topology( self, step, self.grid_height,self.grid_width)
+                self.pairs = Topology._form_pairs_with_toroidal_topology(self, step, self.grid_height, self.grid_width)
             elif self.topology_type == 'scale-free':
-                self.pairs = Topology._form_pairs_with_scale_free_topology(self, self.num_agents,self.scale_free_graph)
+                self.pairs = Topology._form_pairs_with_scale_free_topology(self, self.num_agents, self.scale_free_graph)
             elif self.topology_type == 'random':
-                self.pairs = Topology._form_pairs_randomly(self,self.num_agents)
+                self.pairs = Topology._form_pairs_randomly(self, self.num_agents)
 
             for agent1_id, agent2_id in self.pairs:
                 agent1 = self.agents[agent1_id]
@@ -82,10 +58,10 @@ class Simulation:
                     count_AB += 1
                 elif action1 == 'B' and action2 == 'A':
                     count_BA += 1
-                if self.topology_type == 'random' and self.norm_changed:
-                    reward1, reward2 = self._calculate_rewards_for_random_topology(action1, action2)
+                if norm_change:
+                    reward1, reward2 = Reward._calculate_rewards_norm_change_(action1, action2,self.less_action)
                 else:
-                    reward1, reward2 = self._calculate_rewards(action1, action2)
+                    reward1, reward2 = Reward._calculate_rewards(action1, action2)
 
                 agent1.update_q_value(action1, reward1)
                 agent2.update_q_value(action2, reward2)
@@ -98,9 +74,51 @@ class Simulation:
 
             self._update_action_combinations(count_AA, count_BB, count_AB, count_BA)
 
-        SimulationPlotter.plot_action_combinations(self.action_combinations)
-        SimulationPlotter.plot_q_values(self.scores_history, self.num_agents)
-        SimulationPlotter.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
+    def run_with_emergence_check(self, drawPlot=True):
+        self.run_simulation()
+        if not self.check_norm_emergence():
+            print("Norm couldn't emerge")
+            less_action = self.determine_less_norm_action()
+            self.update_non_emerging_agents_q_values(less_action)
+
+            self.keep_q_values()
+            self.reset_to_final_q_values()
+
+            self.run_simulation()
+            if drawPlot:
+                self.plot_three_plots()
+
+            if self.check_norm_emergence():
+                print("When we execute again, norm emerged.")
+                if drawPlot:
+                    self.plot_three_plots()
+            else:
+                print("When we execute again, norm couldn't emerge.")
+                if drawPlot:
+                    self.plot_three_plots()
+
+        if self.topology_type == 'random':
+            self.norm_changed = True
+
+            self.keep_q_values()
+            self.reset_to_final_q_values()
+
+            self.run_simulation()
+            if drawPlot:
+                self.plot_three_plots()
+
+    def run_after_update_reward(self):
+        self.run_with_emergence_check()
+        self.plot_three_plots()
+        self.less_action = self.determine_less_norm_action()
+        print("---------------------------------------------------------------------------------")
+        print("Norm is changing")
+        self.keep_q_values()
+        self.reset_to_final_q_values()
+        self.run_with_emergence_check(True)
+        print("After change the norm:")
+        self.plot_three_plots()
+
 
     def check_norm_emergence(self):
         count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
@@ -123,7 +141,7 @@ class Simulation:
     def update_non_emerging_agents_q_values(self, action):
         agents_choosing_action = [agent for agent in self.agents if agent.last_action == action]
 
-        num_agents_to_update = int(len(agents_choosing_action) * 0.3)
+        num_agents_to_update = int(len(agents_choosing_action) * 0.35)
         agents_to_update = random.sample(agents_choosing_action, num_agents_to_update)
         print("Agents choosing action", action, ":", [agent.agent_id for agent in agents_choosing_action])
 
@@ -145,18 +163,6 @@ class Simulation:
         for agent in self.agents:
             if agent.final_q_values:
                 agent.q_values = agent.final_q_values.copy()
-
-    def _calculate_rewards(self, action1, action2):
-        """Calculate rewards based on actions."""
-        if action1 == action2:
-            return 1, 1
-        return -1, -1
-
-    def _calculate_rewards_for_random_topology(self, action1, action2):
-        """Calculate rewards for changing norm."""
-        if action1 == action2:
-            return 0.5, 0.5
-        return -1, -1
 
     def _update_action_combinations(self, count_AA, count_BB, count_AB, count_BA):
         """Track the action combinations over time."""
@@ -207,23 +213,23 @@ class Simulation:
 
         for agent_size in agent_sizes:
             self.num_agents = agent_size
-            self.grid_height = (self.num_agents + self.grid_width - 1) // self.grid_width  # Adjust grid height
+            self.grid_height = (self.num_agents + self.grid_width - 1) // self.grid_width
 
             self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in
                            range(self.num_agents)]
-            self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]  # Reinitialize scores_history
+            self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
 
-            self.run_with_emergence_check()
+            self.run_with_emergence_check(False)
 
             count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
             count_B = self.num_agents - count_A
 
             if count_A >= self.num_agents * 0.9:
-                norm_counts.append((count_A // agent_size) * 100)
+                norm_counts.append((count_A // self.num_agents) * 100)
             elif count_B >= self.num_agents * 0.9:
-                norm_counts.append((count_B // agent_size) * 100)
+                norm_counts.append((count_B // self.num_agents) * 100)
             else:
-                norm_counts.append(0)  # If no norm emerged
+                norm_counts.append(0)
 
             self.reset_simulation()
 
@@ -233,3 +239,8 @@ class Simulation:
         plt.xlabel("Number of Agents")
         plt.ylabel("Percentage Count of Dominant Action")
         plt.show()
+
+    def plot_three_plots(self):
+        SimulationPlotter.plot_action_combinations(self.action_combinations)
+        SimulationPlotter.plot_q_values(self.scores_history, self.num_agents)
+        SimulationPlotter.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)

@@ -83,3 +83,4 @@ class SimulationPlotter:
         plt.ylabel('Number of Wins')
         plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
         plt.show()
+
