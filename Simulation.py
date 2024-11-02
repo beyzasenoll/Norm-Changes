@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 from Agent import Agent
 import networkx as nx
 
+from SimulationPlotter import SimulationPlotter
+from Topology import Topology
+
 
 class Simulation:
     def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=100,
@@ -58,11 +61,11 @@ class Simulation:
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
             if self.topology_type == 'toroidal':
-                self.pairs = self._form_pairs_with_toroidal_topology(step)
+                self.pairs = Topology._form_pairs_with_toroidal_topology( self, step, self.grid_height,self.grid_width)
             elif self.topology_type == 'scale-free':
-                self.pairs = self._form_pairs_with_scale_free_topology()
+                self.pairs = Topology._form_pairs_with_scale_free_topology(self, self.num_agents,self.scale_free_graph)
             elif self.topology_type == 'random':
-                self.pairs = self._form_pairs_randomly()
+                self.pairs = Topology._form_pairs_randomly(self,self.num_agents)
 
             for agent1_id, agent2_id in self.pairs:
                 agent1 = self.agents[agent1_id]
@@ -95,9 +98,9 @@ class Simulation:
 
             self._update_action_combinations(count_AA, count_BB, count_AB, count_BA)
 
-        self.plot_action_combinations()
-        self.plot_q_values()
-        self.plot_agent_actions_graph()
+        SimulationPlotter.plot_action_combinations(self.action_combinations)
+        SimulationPlotter.plot_q_values(self.scores_history, self.num_agents)
+        SimulationPlotter.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
 
     def check_norm_emergence(self):
         count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
@@ -142,71 +145,6 @@ class Simulation:
         for agent in self.agents:
             if agent.final_q_values:
                 agent.q_values = agent.final_q_values.copy()
-
-    def _form_pairs_with_toroidal_topology(self, episode):
-        """Form pairs of agents based on toroidal grid topology."""
-        pairs = []
-
-        if episode % 4 == 0:
-            # Right neighbor
-            for row in range(self.grid_height):
-                for col in range(0, self.grid_width, 2):
-                    agent1_id = row * self.grid_width + col
-                    agent2_id = row * self.grid_width + (col + 1) % self.grid_width
-                    pairs.append((agent1_id, agent2_id))
-
-        elif episode % 4 == 1:
-            # Left neighbor
-            for row in range(self.grid_height):
-                for col in range(0, self.grid_width, 2):
-                    agent1_id = row * self.grid_width + col
-                    agent2_id = row * self.grid_width + (col - 1) % self.grid_width
-                    pairs.append((agent1_id, agent2_id))
-
-        elif episode % 4 == 2:
-            # Below neighbor
-            for col in range(self.grid_width):
-                for row in range(0, self.grid_height, 2):
-                    agent1_id = row * self.grid_width + col
-                    agent2_id = ((row + 1) % self.grid_height) * self.grid_width + col
-                    pairs.append((agent1_id, agent2_id))
-
-        else:
-            # Above neighbor
-            for col in range(self.grid_width):
-                for row in range(0, self.grid_height, 2):
-                    agent1_id = row * self.grid_width + col
-                    agent2_id = ((row - 1) % self.grid_height) * self.grid_width + col
-                    pairs.append((agent1_id, agent2_id))
-
-        return pairs
-
-    def _form_pairs_with_scale_free_topology(self):
-        edges = list(self.scale_free_graph.edges)
-
-        random.shuffle(edges)
-
-        paired_agents = set()
-        pairs = []
-
-        for edge in edges:
-            agent1_id, agent2_id = edge
-            if agent1_id not in paired_agents and agent2_id not in paired_agents:
-                pairs.append((agent1_id, agent2_id))
-                paired_agents.add(agent1_id)
-                paired_agents.add(agent2_id)
-
-            if len(paired_agents) >= self.num_agents:
-                break
-
-        return pairs
-
-    def _form_pairs_randomly(self):
-        """Pair agents randomly for each timestep, returning agent indices."""
-        agent_indices = list(range(self.num_agents))
-        random.shuffle(agent_indices)
-        pairs = [(agent_indices[i], agent_indices[i + 1]) for i in range(0, len(agent_indices) - 1, 2)]
-        return pairs
 
     def _calculate_rewards(self, action1, action2):
         """Calculate rewards based on actions."""
@@ -255,7 +193,7 @@ class Simulation:
             print(sim)
             self.reset_simulation()
 
-        self.plot_aa_vs_bb_results(aa_wins, bb_wins)
+        SimulationPlotter.plot_aa_vs_bb_results(aa_wins, bb_wins)
 
     def reset_simulation(self):
         """Reset the simulation to run it again with the same agents."""
@@ -294,84 +232,4 @@ class Simulation:
         plt.title("Norm Emergence Percentage")
         plt.xlabel("Number of Agents")
         plt.ylabel("Percentage Count of Dominant Action")
-        plt.show()
-
-    def plot_action_combinations(self):
-        """Plot the frequencies of different action combinations over time."""
-        plt.figure(figsize=(6, 4))
-
-        plt.plot(self.action_combinations['AA'], label='Both A')
-        plt.plot(self.action_combinations['BB'], label='Both B')
-        plt.plot(self.action_combinations['AB'], label='A vs B')
-        plt.plot(self.action_combinations['BA'], label='B vs A')
-
-        plt.xlabel('Step')
-        plt.ylabel('Frequency')
-        plt.title('Action Combinations Over Time')
-        plt.legend()
-        plt.show()
-
-    def plot_q_values(self):
-        """Plot the evolution of average Q-values for actions 'A' and 'B' over time for all agents."""
-        plt.figure(figsize=(8, 6))
-
-        num_timesteps = len(self.scores_history[0]['A'])
-
-        avg_qval_A = []
-        avg_qval_B = []
-
-        # Loop through each timestep
-        for t in range(num_timesteps):
-            sum_qval_A = 0
-            sum_qval_B = 0
-
-            for agent_id in range(self.num_agents):
-                sum_qval_A += self.scores_history[agent_id]['A'][t]
-                sum_qval_B += self.scores_history[agent_id]['B'][t]
-
-            avg_qval_A.append(sum_qval_A / self.num_agents)
-            avg_qval_B.append(sum_qval_B / self.num_agents)
-
-        plt.plot(avg_qval_A, label='Average Q-value for Action A', color='blue')
-        plt.plot(avg_qval_B, label='Average Q-value for Action B', color='orange')
-
-        plt.xlabel('Timestep')
-        plt.ylabel('Average Q-value')
-        plt.title('Average Q-values for Actions A and B Over Time')
-
-        plt.legend()
-
-        plt.tight_layout()
-        plt.show()
-
-    def plot_aa_vs_bb_results(self, aa_wins, bb_wins):
-        """Plot the result of AA vs BB wins in the final timestep across multiple simulations."""
-        labels = ['AA Wins', 'BB Wins']
-        counts = [aa_wins, bb_wins]
-
-        plt.figure(figsize=(6, 4))
-        plt.bar(labels, counts, color=['blue', 'green'])
-        plt.xlabel('Action')
-        plt.ylabel('Number of Wins')
-        plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
-        plt.show()
-
-    def plot_agent_actions_graph(self):
-        """Plot a graph-grid showing agents' final actions with colors and IDs."""
-        G = nx.grid_2d_graph(self.grid_height, self.grid_width)
-        pos = {node: (node[1], -node[0]) for node in G.nodes()}
-
-        colors = []
-        labels = {}
-
-        for agent in self.agents:
-            color = 'blue' if agent.last_action == 'A' else 'yellow'
-            colors.append(color)
-            labels[(agent.agent_id // self.grid_width, agent.agent_id % self.grid_width)] = str(agent.agent_id)
-
-        plt.figure(figsize=(8, 6))
-        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels, node_size=500, font_size=10,
-                font_color='white', font_weight='bold')
-
-        plt.title('Final Actions of Agents (Blue: A, Red: B)')
         plt.show()
