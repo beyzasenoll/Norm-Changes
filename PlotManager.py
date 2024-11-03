@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as np
 
 
-class SimulationPlotter:
+class PlotManager:
     """Class responsible for visualizing simulation data."""
 
     @staticmethod
@@ -84,3 +85,41 @@ class SimulationPlotter:
         plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
         plt.show()
 
+    def plot_norm_abandonment_vs_reward(self,reward_values, abandonment_percentages):
+        plt.figure(figsize=(10, 6))
+        plt.plot(reward_values, abandonment_percentages, marker='o', linestyle='--', color='b')
+        plt.xlabel("Reward for emerged norm")
+        plt.ylabel("Percentage of population abandoning previous emerged norm")
+        plt.title("Norm Abandonment vs. Reward for Emerged Norm")
+        plt.grid(True)
+        plt.show()
+
+    @staticmethod
+    def plot_norm_abandonment_vs_reward_multiple_topologies(reward_values, abandonment_percentages_by_topology):
+        plt.figure(figsize=(10, 6))
+        for topology, abandonment_percentages in abandonment_percentages_by_topology.items():
+            plt.plot(reward_values, abandonment_percentages, marker='o', linestyle='--', label=f'{topology.capitalize()} Topology')
+        plt.xlabel("Reward for emerged norm")
+        plt.ylabel("Percentage of population abandoning previous emerged norm")
+        plt.title("Norm Abandonment vs. Reward for Emerged Norm (Multiple Topologies)")
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
+    @staticmethod
+    def plot_trendsetters_vs_norms(trendsetter_ratios, emergence_percentages, abandonment_percentages):
+        plt.figure(figsize=(10, 6))
+
+        plt.plot(trendsetter_ratios, emergence_percentages, marker='o', linestyle='-', color='g',
+                 label='Percentage of Norm Emergence')
+        plt.plot(trendsetter_ratios, abandonment_percentages, marker='x', linestyle='--', color='r',
+                 label='Percentage of Norm Abandonment')
+
+        plt.xlabel("Trendsetters Ratio (0.1 to 0.5)")
+        plt.ylabel("Percentage (%)")
+        plt.title("Norm Emergence and Abandonment vs. Trendsetters Ratio")
+        plt.xticks(np.arange(0.1, 0.6, 0.05))  # X ekseni için etiketler
+        plt.ylim(0, 110)  # Y eksenini 0-100 arasında tut
+        plt.grid(True)
+        plt.legend()
+        plt.show()

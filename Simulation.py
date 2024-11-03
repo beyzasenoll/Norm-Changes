@@ -1,10 +1,12 @@
 import random
 import matplotlib.pyplot as plt
+import numpy as np
+
 from Agent import Agent
 import networkx as nx
 
-from Reward import Reward
-from SimulationPlotter import SimulationPlotter
+from RewardManager import Reward
+from PlotManager import PlotManager
 from Topology import Topology
 
 
@@ -24,6 +26,7 @@ class Simulation:
         self.temperature = temperature
         self.pairs = []
         self.less_action= None
+        self.norm_changed=False
 
         self.grid_width = 10
         self.grid_height = int(self.num_agents / self.grid_width)
@@ -31,7 +34,7 @@ class Simulation:
         if self.topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
 
-    def run_simulation(self, norm_change=False):
+    def run_simulation(self,reward=None):
         """Run the simulation for a specified number of steps."""
         for step in range(self.num_steps):
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
@@ -58,10 +61,14 @@ class Simulation:
                     count_AB += 1
                 elif action1 == 'B' and action2 == 'A':
                     count_BA += 1
-                if norm_change:
-                    reward1, reward2 = Reward._calculate_rewards_norm_change_(action1, action2,self.less_action)
+                if self.norm_changed:
+                    reward1, reward2 = Reward._calculate_rewards_norm_change_(action1, action2,self.less_action,reward)
                 else:
                     reward1, reward2 = Reward._calculate_rewards(action1, action2)
+
+                if reward1 is None or reward2 is None:
+                    raise ValueError(f"Reward values should not be None: reward1={reward1}, reward2={reward2}")
+
 
                 agent1.update_q_value(action1, reward1)
                 agent2.update_q_value(action2, reward2)
@@ -86,39 +93,16 @@ class Simulation:
 
             self.run_simulation()
             if drawPlot:
-                self.plot_three_plots()
+                self.plot_simulation_results()
 
             if self.check_norm_emergence():
                 print("When we execute again, norm emerged.")
                 if drawPlot:
-                    self.plot_three_plots()
+                    self.plot_simulation_results()
             else:
                 print("When we execute again, norm couldn't emerge.")
                 if drawPlot:
-                    self.plot_three_plots()
-
-        if self.topology_type == 'random':
-            self.norm_changed = True
-
-            self.keep_q_values()
-            self.reset_to_final_q_values()
-
-            self.run_simulation()
-            if drawPlot:
-                self.plot_three_plots()
-
-    def run_after_update_reward(self):
-        self.run_with_emergence_check()
-        self.plot_three_plots()
-        self.less_action = self.determine_less_norm_action()
-        print("---------------------------------------------------------------------------------")
-        print("Norm is changing")
-        self.keep_q_values()
-        self.reset_to_final_q_values()
-        self.run_with_emergence_check(True)
-        print("After change the norm:")
-        self.plot_three_plots()
-
+                    self.plot_simulation_results()
 
     def check_norm_emergence(self):
         count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
@@ -199,7 +183,7 @@ class Simulation:
             print(sim)
             self.reset_simulation()
 
-        SimulationPlotter.plot_aa_vs_bb_results(aa_wins, bb_wins)
+        PlotManager.plot_aa_vs_bb_results(aa_wins, bb_wins)
 
     def reset_simulation(self):
         """Reset the simulation to run it again with the same agents."""
@@ -240,7 +224,47 @@ class Simulation:
         plt.ylabel("Percentage Count of Dominant Action")
         plt.show()
 
-    def plot_three_plots(self):
-        SimulationPlotter.plot_action_combinations(self.action_combinations)
-        SimulationPlotter.plot_q_values(self.scores_history, self.num_agents)
-        SimulationPlotter.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
+    def calculate_norm_abandonment(self, emerged_norm):
+        num_abandoning = sum(
+            1 for agent in self.agents if agent.last_action == emerged_norm
+        )
+        return (num_abandoning / self.num_agents) * 100
+
+    def run_after_update_reward(self):
+        reward_values = [-0.5, 0, 0.5]
+        topologies = ["random", "toroidal"]
+        abandonment_percentages_by_topology = {topology: [] for topology in topologies}
+
+        for topology in topologies:
+            print(f"Running simulation for topology: {topology}")
+            self.topology_type = topology
+            abandonment_percentages = []
+
+            for reward in reward_values:
+                self.run_with_emergence_check(False)
+                self.less_action = self.determine_less_norm_action()
+                print("---------------------------------------------------------------------------------")
+                print("NORM IS CHANGING")
+                self.keep_q_values()
+                self.reset_to_final_q_values()
+                self.norm_changed = True
+
+                print(f"Running simulation with norm changed and reward={reward} for topology {topology}")
+
+                self.run_simulation(reward)
+                abandonment_percentage = self.calculate_norm_abandonment(self.less_action)
+                abandonment_percentages.append(abandonment_percentage)
+
+                print("After change the norm")
+                self.reset_simulation()
+                self.norm_changed = False
+
+            abandonment_percentages_by_topology[topology] = abandonment_percentages
+
+        # Plotting the results for both topologies
+        PlotManager.plot_norm_abandonment_vs_reward_multiple_topologies(reward_values,
+                                                                        abandonment_percentages_by_topology)
+    def plot_simulation_results(self):
+        PlotManager.plot_action_combinations(self.action_combinations)
+        PlotManager.plot_q_values(self.scores_history, self.num_agents)
+        PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
