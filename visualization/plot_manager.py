@@ -110,16 +110,33 @@ class PlotManager:
     def plot_trendsetters_vs_norms(trendsetter_ratios, emergence_percentages, abandonment_percentages):
         plt.figure(figsize=(10, 6))
 
+        # Plotting the percentage of norm emergence
         plt.plot(trendsetter_ratios, emergence_percentages, marker='o', linestyle='-', color='g',
-                 label='Percentage of Norm Emergence')
-        plt.plot(trendsetter_ratios, abandonment_percentages, marker='x', linestyle='--', color='r',
-                 label='Percentage of Norm Abandonment')
+                 label='Percentage of Norm Emergence', linewidth=2, markersize=8)
 
-        plt.xlabel("Trendsetters Ratio (0.1 to 0.5)")
-        plt.ylabel("Percentage (%)")
-        plt.title("Norm Emergence and Abandonment vs. Trendsetters Ratio")
-        plt.xticks(np.arange(0.1, 0.6, 0.05))  # X ekseni için etiketler
-        plt.ylim(0, 110)  # Y eksenini 0-100 arasında tut
-        plt.grid(True)
-        plt.legend()
+        # Plotting the percentage of norm abandonment
+        plt.plot(trendsetter_ratios, abandonment_percentages, marker='x', linestyle='--', color='r',
+                 label='Percentage of Norm Abandonment', linewidth=2, markersize=8)
+
+        # Adding labels and title
+        plt.xlabel("Trendsetters Ratio (0.1 to 0.5)", fontsize=12)
+        plt.ylabel("Percentage (%)", fontsize=12)
+        plt.title("Norm Emergence and Abandonment vs. Trendsetters Ratio", fontsize=14)
+
+        # Setting the x-ticks with appropriate labels
+        plt.xticks(np.arange(0.1, 0.6, 0.05))
+        plt.yticks(np.arange(0, 110, 10))  # Y-axis ticks from 0 to 100
+
+        plt.ylim(0, 110)  # Setting the y-axis limits
+        plt.grid(True, linestyle='--', alpha=0.7)  # Adding a grid for better readability
+        plt.legend(fontsize=12)  # Adjusting the legend font size
+
+        # Display the plot
+        plt.tight_layout()  # Adjust layout to fit labels and title
         plt.show()
+
+    @staticmethod
+    def plot_simulation_results(action_combinations, scores_history, agents, grid_height, grid_width):
+        PlotManager.plot_action_combinations(action_combinations)
+        PlotManager.plot_q_values(scores_history, len(agents))
+        PlotManager.plot_agent_actions_graph(agents, grid_height, grid_width)
