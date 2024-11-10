@@ -10,10 +10,10 @@ class PlotManager:
     def plot_action_combinations(action_combinations):
         """Plot the frequencies of different action combinations over time."""
         plt.figure(figsize=(6, 4))
-        plt.plot(action_combinations['AA'], label='Both A')
-        plt.plot(action_combinations['BB'], label='Both B')
-        plt.plot(action_combinations['AB'], label='A vs B')
-        plt.plot(action_combinations['BA'], label='B vs A')
+        plt.plot(action_combinations['AA'], label='Both A',color='blue')
+        plt.plot(action_combinations['BB'], label='Both B',color='orange')
+        plt.plot(action_combinations['AB'], label='A vs B',color='green')
+        plt.plot(action_combinations['BA'], label='B vs A', color='red')
         plt.xlabel('Step')
         plt.ylabel('Frequency')
         plt.title('Action Combinations Over Time')
@@ -48,7 +48,7 @@ class PlotManager:
         labels = ['AA Wins', 'BB Wins']
         counts = [aa_wins, bb_wins]
         plt.figure(figsize=(6, 4))
-        plt.bar(labels, counts, color=['blue', 'green'])
+        plt.bar(labels, counts, color=['blue', 'orange'])
         plt.xlabel('Action')
         plt.ylabel('Number of Wins')
         plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
@@ -62,7 +62,7 @@ class PlotManager:
         colors, labels = [], {}
 
         for agent in agents:
-            color = 'blue' if agent.last_action == 'A' else 'yellow'
+            color = 'blue' if agent.last_action == 'A' else 'orange'
             colors.append(color)
             labels[(agent.agent_id // grid_width, agent.agent_id % grid_width)] = str(agent.agent_id)
 
@@ -79,7 +79,7 @@ class PlotManager:
         counts = [aa_wins, bb_wins]
 
         plt.figure(figsize=(6, 4))
-        plt.bar(labels, counts, color=['blue', 'green'])
+        plt.bar(labels, counts, color=['blue', 'orange'])
         plt.xlabel('Action')
         plt.ylabel('Number of Wins')
         plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
@@ -140,3 +140,15 @@ class PlotManager:
         PlotManager.plot_action_combinations(action_combinations)
         PlotManager.plot_q_values(scores_history, len(agents))
         PlotManager.plot_agent_actions_graph(agents, grid_height, grid_width)
+
+    @staticmethod
+    def plot_abandonment_percentages_by_ratio(abandonment_percentages_by_ratio):
+        """Plot the norm abandonment percentages by trendsetter ratio."""
+        plt.figure(figsize=(10, 6))
+        plt.plot(list(abandonment_percentages_by_ratio.keys()), list(abandonment_percentages_by_ratio.values()),
+                 marker='o')
+        plt.title("Norm Abandonment Percentage by Trendsetter Ratio")
+        plt.xlabel("Trendsetter Ratio")
+        plt.ylabel("Norm Abandonment Percentage (%)")
+        plt.grid(True)
+        plt.show()

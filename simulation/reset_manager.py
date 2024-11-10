@@ -22,6 +22,7 @@ class ResetManager:
         for agent in self.agents:
             if agent.final_q_values:
                 agent.q_values = agent.final_q_values.copy()
+
     @staticmethod
     def reset_simulation(self):
         """Reset the simulation to run it again with the same agents."""

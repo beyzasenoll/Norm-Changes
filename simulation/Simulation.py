@@ -25,7 +25,7 @@ class Simulation:
         self.epsilon = epsilon
         self.pairs = []
 
-        self.norm_checker = NormChecker(self.agents,self.num_agents)
+        self.norm_checker = NormChecker(self.agents, self.num_agents)
         self.reset_manager = ResetManager(self.agents, self.num_agents)
 
         self.grid_width = 10
@@ -90,6 +90,7 @@ class Simulation:
         if not self.norm_checker.check_norm_emergence():
             print("Norm couldn't emerge")
             less_action = self.norm_checker.determine_less_norm_action()
+            self.trendsetters_abandonment_analysis(less_action)
             self.update_non_emerging_agents_q_values(less_action)
 
             self.reset_manager.keep_q_values()
@@ -160,7 +161,7 @@ class Simulation:
             else:
                 norm_counts.append(0)
 
-            self.reset_manager.reset_simulation()
+            self.reset_manager.reset_simulation(self)
 
         plt.figure(figsize=(10, 6))
         plt.plot(agent_sizes, norm_counts, marker='o')
@@ -199,10 +200,10 @@ class Simulation:
                 if drawPlot:
                     self.plot_simulation_results()
 
-                abandonment_percentage = NormChecker.calculate_norm_abandonment(self,self.norm_checker.less_action)
+                abandonment_percentage = NormChecker.calculate_norm_abandonment(self, self.norm_checker.less_action)
                 abandonment_percentages.append(abandonment_percentage)
 
-                print("After change the norm")
+                print("After change the norm : ")
                 self.norm_checker.norm_changed = False
                 self.reset_manager.reset_simulation(self)
 
@@ -236,3 +237,49 @@ class Simulation:
         self.action_combinations['BB'].append(count_BB)
         self.action_combinations['AB'].append(count_AB)
         self.action_combinations['BA'].append(count_BA)
+
+    def run_with_emergence_check_with_different_trendsetters(self):
+        """Run the simulation with norm emergence check, updating agents based on different trendsetter ratios."""
+        self.run_simulation()
+        self.plot_simulation_results()
+
+        if not self.norm_checker.check_norm_emergence():
+            print("Norm couldn't emerge initially.")
+            abandonment_percentages_by_ratio = {}
+            trendsetters_ratios = [round(i * 0.1, 2) for i in range(1, 6)]
+
+            less_action = self.norm_checker.determine_less_norm_action()
+
+            initial_q_values = {agent.agent_id: agent.q_values.copy() for agent in self.agents}
+            initial_actions = {agent.agent_id: agent.last_action for agent in self.agents}
+
+            for ratio in trendsetters_ratios:
+                print(f"Evaluating norm abandonment for trendsetter ratio: {ratio}")
+
+                for agent in self.agents:
+                    agent.q_values = initial_q_values[agent.agent_id].copy()
+
+                self.update_non_emerging_agents_q_values(less_action, ratio)
+
+                # Keep Q-values and reset agents
+                self.reset_manager.keep_q_values()
+                self.reset_manager.reset_to_final_q_values()
+
+                self.run_simulation()
+                PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
+
+                initial_less_action_agents = [agent for agent in self.agents if
+                                              initial_actions[agent.agent_id] == less_action]
+                abandonment_count = sum(1 for agent in initial_less_action_agents if agent.last_action != less_action)
+                abandonment_percentage = (abandonment_count / len(
+                    initial_less_action_agents)) * 100
+
+                abandonment_percentages_by_ratio[ratio] = abandonment_percentage
+
+                print(f"Trendsetter Ratio {ratio}: Norm Abandonment Percentage = {abandonment_percentage}%")
+
+                self.reset_manager.reset_simulation(self)
+                PlotManager.plot_abandonment_percentages_by_ratio(abandonment_percentages_by_ratio)
+
+        else:
+            print("Norm already emerged.")
