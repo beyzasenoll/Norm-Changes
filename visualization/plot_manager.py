@@ -98,10 +98,11 @@ class PlotManager:
     def plot_norm_abandonment_vs_reward_multiple_topologies(reward_values, abandonment_percentages_by_topology):
         plt.figure(figsize=(10, 6))
         for topology, abandonment_percentages in abandonment_percentages_by_topology.items():
-            plt.plot(reward_values, abandonment_percentages, marker='o', linestyle='--', label=f'{topology.capitalize()} Topology')
+            plt.plot(reward_values, abandonment_percentages, marker='o', linestyle='--',
+                     label=f'{topology.capitalize()} Topology')
         plt.xlabel("Reward for emerged norm")
-        plt.ylabel("Percentage of population abandoning previous emerged norm")
-        plt.title("Norm Abandonment vs. Reward for Emerged Norm (Multiple Topologies)")
+        plt.ylabel("Average Percentage of population abandoning previous emerged norm")
+        plt.title("Average Norm Abandonment vs. Reward for Emerged Norm (Multiple Topologies)")
         plt.grid(True)
         plt.legend()
         plt.show()
@@ -152,3 +153,27 @@ class PlotManager:
         plt.ylabel("Norm Abandonment Percentage (%)")
         plt.grid(True)
         plt.show()
+
+    @staticmethod
+    def plot_abandonment_percentage(avg_abandonment_percentages):
+        """Plot the average norm abandonment percentage by trendsetter ratio."""
+        plt.figure(figsize=(10, 6))
+        plt.plot(list(avg_abandonment_percentages.keys()), list(avg_abandonment_percentages.values()), marker='o')
+        plt.title("Average Norm Abandonment Percentage by Trendsetter Ratio")
+        plt.xlabel("Trendsetter Ratio")
+        plt.ylabel("Average Norm Abandonment Percentage (%)")
+        plt.grid(True)
+        plt.show()
+
+    @staticmethod
+    def plot_norm_emergence(agent_sizes, avg_norm_counts):
+        """Plot the average norm emergence percentage for different agent sizes."""
+        plt.figure(figsize=(10, 6))
+        plt.plot(agent_sizes, avg_norm_counts, marker='o')
+        plt.title("Average Norm Emergence Percentage by Agent Size")
+        plt.xlabel("Number of Agents")
+        plt.ylabel("Average Percentage Count of Dominant Action")
+        plt.grid(True)
+        plt.show()
+
+

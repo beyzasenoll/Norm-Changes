@@ -90,8 +90,7 @@ class Simulation:
         if not self.norm_checker.check_norm_emergence():
             print("Norm couldn't emerge")
             less_action = self.norm_checker.determine_less_norm_action()
-            self.trendsetters_abandonment_analysis(less_action)
-            self.update_non_emerging_agents_q_values(less_action)
+            self.update_agents_q_values(less_action)
 
             self.reset_manager.keep_q_values()
             self.reset_manager.reset_to_final_q_values()
@@ -137,87 +136,49 @@ class Simulation:
 
         PlotManager.plot_aa_vs_bb_results(aa_wins, bb_wins)
 
-    def simulation_different_agent_size(self):
+    def simulation_different_agent_size(self, num_simulations=50):
+        """Simulate different agent sizes and calculate norm emergence percentage over multiple runs."""
         agent_sizes = [40, 80, 120, 200]
-        norm_counts = []
+        norm_counts_by_size = {size: [] for size in agent_sizes}
 
-        for agent_size in agent_sizes:
-            self.num_agents = agent_size
-            self.grid_height = (self.num_agents + self.grid_width - 1) // self.grid_width
+        for sim in range(num_simulations):
+            print(f"Simulation {sim + 1}/{num_simulations}")
 
-            self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in
-                           range(self.num_agents)]
-            self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
+            for agent_size in agent_sizes:
+                self.num_agents = agent_size
+                self.grid_height = (self.num_agents + self.grid_width - 1) // self.grid_width
 
-            self.run_with_emergence_check(False)
+                self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in
+                               range(self.num_agents)]
+                self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
 
-            count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
-            count_B = self.num_agents - count_A
+                self.run_with_emergence_check(False)
 
-            if count_A >= self.num_agents * 0.9:
-                norm_counts.append((count_A // self.num_agents) * 100)
-            elif count_B >= self.num_agents * 0.9:
-                norm_counts.append((count_B // self.num_agents) * 100)
-            else:
-                norm_counts.append(0)
+                count_A = sum(1 for agent in self.agents if agent.last_action == 'A')
+                count_B = self.num_agents - count_A
 
-            self.reset_manager.reset_simulation(self)
+                if count_A >= self.num_agents * 0.9:
+                    norm_counts_by_size[agent_size].append((count_A / self.num_agents) * 100)
+                elif count_B >= self.num_agents * 0.9:
+                    norm_counts_by_size[agent_size].append((count_B / self.num_agents) * 100)
+                else:
+                    norm_counts_by_size[agent_size].append(0)
 
-        plt.figure(figsize=(10, 6))
-        plt.plot(agent_sizes, norm_counts, marker='o')
-        plt.title("Norm Emergence Percentage")
-        plt.xlabel("Number of Agents")
-        plt.ylabel("Percentage Count of Dominant Action")
-        plt.show()
-
-    def run_after_update_reward(self):
-        drawPlot = False
-        reward_values = [-0.5, 0, 0.5]
-        topologies = ["random", "toroidal"]
-        abandonment_percentages_by_topology = {topology: [] for topology in topologies}
-
-        for topology in topologies:
-            print(f"Running simulation for topology: {topology}")
-            self.topology_type = topology
-            abandonment_percentages = []
-
-            for reward in reward_values:
-                self.run_with_emergence_check(drawPlot=drawPlot)
-
-                self.norm_checker.less_action = self.norm_checker.determine_less_norm_action()
-
-                print("---------------------------------------------------------------------------------")
-                print("NORM IS CHANGING")
-
-                self.reset_manager.keep_q_values()
-
-                self.reset_manager.reset_to_final_q_values()
-
-                self.norm_checker.norm_changed = True
-
-                print(f"Running simulation with norm changed and reward={reward} for topology {topology}")
-                self.run_simulation(reward=reward)
-                if drawPlot:
-                    self.plot_simulation_results()
-
-                abandonment_percentage = NormChecker.calculate_norm_abandonment(self, self.norm_checker.less_action)
-                abandonment_percentages.append(abandonment_percentage)
-
-                print("After change the norm : ")
-                self.norm_checker.norm_changed = False
                 self.reset_manager.reset_simulation(self)
 
-            abandonment_percentages_by_topology[topology] = abandonment_percentages
+        avg_norm_counts = {
+            size: (sum(values) / len(values)) if len(values) > 0 else 0
+            for size, values in norm_counts_by_size.items()
+        }
 
-        PlotManager.plot_norm_abandonment_vs_reward_multiple_topologies(reward_values,
-                                                                        abandonment_percentages_by_topology)
+        PlotManager.plot_norm_emergence(agent_sizes, list(avg_norm_counts.values()))
 
     def plot_simulation_results(self):
         PlotManager.plot_action_combinations(self.action_combinations)
         PlotManager.plot_q_values(self.scores_history, self.num_agents)
         PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
 
-    def update_non_emerging_agents_q_values(self, action, trendsetters_ratio=0.5):
+    def update_agents_q_values(self, action, trendsetters_ratio=0.5):
         """Update Q-values for agents who chose the less dominant action."""
         agents_choosing_action = [agent for agent in self.agents if agent.last_action == action]
         num_agents_to_update = int(len(agents_choosing_action) * trendsetters_ratio)
@@ -238,48 +199,50 @@ class Simulation:
         self.action_combinations['AB'].append(count_AB)
         self.action_combinations['BA'].append(count_BA)
 
-    def run_with_emergence_check_with_different_trendsetters(self):
-        """Run the simulation with norm emergence check, updating agents based on different trendsetter ratios."""
-        self.run_simulation()
-        self.plot_simulation_results()
+    def run_with_emergence_check_with_different_trendsetters(self, num_simulations=50):
+        """Run the simulation with norm emergence check, averaging norm abandonment over multiple runs for trendsetter
+        ratios."""
+        trendsetters_ratios = [round(i * 0.1, 2) for i in range(1, 6)]
+        abandonment_percentages_by_ratio = {ratio: [] for ratio in trendsetters_ratios}
 
-        if not self.norm_checker.check_norm_emergence():
-            print("Norm couldn't emerge initially.")
-            abandonment_percentages_by_ratio = {}
-            trendsetters_ratios = [round(i * 0.1, 2) for i in range(1, 6)]
+        sim = 0
 
-            less_action = self.norm_checker.determine_less_norm_action()
+        while sim < num_simulations:
+            print(f"Simulation {sim + 1}/{num_simulations}")
+            self.run_simulation()
 
-            initial_q_values = {agent.agent_id: agent.q_values.copy() for agent in self.agents}
-            initial_actions = {agent.agent_id: agent.last_action for agent in self.agents}
+            if not self.norm_checker.check_norm_emergence():
+                less_action = self.norm_checker.determine_less_norm_action()
+                initial_q_values = {agent.agent_id: agent.q_values.copy() for agent in self.agents}
+                initial_actions = {agent.agent_id: agent.last_action for agent in self.agents}
 
-            for ratio in trendsetters_ratios:
-                print(f"Evaluating norm abandonment for trendsetter ratio: {ratio}")
+                for ratio in trendsetters_ratios:
+                    for agent in self.agents:
+                        agent.q_values = initial_q_values[agent.agent_id].copy()
 
-                for agent in self.agents:
-                    agent.q_values = initial_q_values[agent.agent_id].copy()
+                    self.update_agents_q_values(less_action, ratio)
+                    self.reset_manager.keep_q_values()
+                    self.reset_manager.reset_to_final_q_values()
+                    self.run_simulation()
 
-                self.update_non_emerging_agents_q_values(less_action, ratio)
+                    initial_less_action_agents = [agent for agent in self.agents if
+                                                  initial_actions[agent.agent_id] == less_action]
+                    abandonment_count = sum(
+                        1 for agent in initial_less_action_agents if agent.last_action != less_action)
+                    abandonment_percentage = (abandonment_count / len(initial_less_action_agents) * 100
+                                              if len(initial_less_action_agents) > 0 else 0)
+                    abandonment_percentages_by_ratio[ratio].append(abandonment_percentage)
 
-                # Keep Q-values and reset agents
-                self.reset_manager.keep_q_values()
-                self.reset_manager.reset_to_final_q_values()
+                    self.reset_manager.reset_simulation(self)
 
-                self.run_simulation()
-                PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
+                sim += 1
+            else:
+                print("Norm already emerged in initial run.")
 
-                initial_less_action_agents = [agent for agent in self.agents if
-                                              initial_actions[agent.agent_id] == less_action]
-                abandonment_count = sum(1 for agent in initial_less_action_agents if agent.last_action != less_action)
-                abandonment_percentage = (abandonment_count / len(
-                    initial_less_action_agents)) * 100
+        avg_abandonment_percentages = {
+            ratio: (sum(values) / len(values)) if len(values) > 0 else 0
+            for ratio, values in abandonment_percentages_by_ratio.items()
+        }
 
-                abandonment_percentages_by_ratio[ratio] = abandonment_percentage
+        PlotManager.plot_abandonment_percentage(avg_abandonment_percentages)
 
-                print(f"Trendsetter Ratio {ratio}: Norm Abandonment Percentage = {abandonment_percentage}%")
-
-                self.reset_manager.reset_simulation(self)
-                PlotManager.plot_abandonment_percentages_by_ratio(abandonment_percentages_by_ratio)
-
-        else:
-            print("Norm already emerged.")
