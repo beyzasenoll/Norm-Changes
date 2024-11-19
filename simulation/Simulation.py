@@ -1,5 +1,5 @@
 import random
-import matplotlib.pyplot as plt
+
 import networkx as nx
 
 from agents.agent import Agent
@@ -161,8 +161,6 @@ class Simulation:
                     norm_counts_by_size[agent_size].append((count_A / self.num_agents) * 100)
                 elif count_B >= self.num_agents * 0.9:
                     norm_counts_by_size[agent_size].append((count_B / self.num_agents) * 100)
-                else:
-                    norm_counts_by_size[agent_size].append(0)
 
                 self.reset_manager.reset_simulation(self)
 
@@ -179,10 +177,17 @@ class Simulation:
         PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
 
     def update_agents_q_values(self, action, trendsetters_ratio=0.5):
-        """Update Q-values for agents who chose the less dominant action."""
+        """Update Q-values for agents who chose the less dominant action, focusing on influential agents."""
         agents_choosing_action = [agent for agent in self.agents if agent.last_action == action]
-        num_agents_to_update = int(len(agents_choosing_action) * trendsetters_ratio)
-        agents_to_update = random.sample(agents_choosing_action, num_agents_to_update)
+
+        agents_sorted_by_influence = sorted(
+            agents_choosing_action,
+            key=lambda agent: self.calculate_influence(agent.agent_id),
+            reverse=True
+        )
+
+        num_agents_to_update = int(len(agents_sorted_by_influence) * trendsetters_ratio)
+        agents_to_update = agents_sorted_by_influence[:num_agents_to_update]
 
         for agent in agents_to_update:
             if action == 'B':
@@ -191,6 +196,15 @@ class Simulation:
             else:
                 agent.q_values['B'] = 1.0
                 agent.q_values['A'] = -1.0
+
+    def calculate_influence(self, agent_id):
+        row = agent_id // self.grid_width
+        col = agent_id % self.grid_width
+        center_row = self.grid_height // 2
+        center_col = self.grid_width // 2
+
+        influence = 1 / (1 + abs(row - center_row) + abs(col - center_col))
+        return influence
 
     def _update_action_combinations(self, count_AA, count_BB, count_AB, count_BA):
         """Track the action combinations over time."""
@@ -245,4 +259,3 @@ class Simulation:
         }
 
         PlotManager.plot_abandonment_percentage(avg_abandonment_percentages)
-

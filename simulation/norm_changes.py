@@ -23,7 +23,7 @@ class NormChanges:
 
             for reward in reward_values:
                 for _ in range(num_runs):
-                    self.simulation_instance.run_with_emergence_check(drawPlot=False)  # Disable plotting here
+                    self.simulation_instance.run_with_emergence_check(drawPlot=False)
                     self.norm_checker.less_action = self.norm_checker.determine_less_norm_action()
 
                     print("---------------------------------------------------------------------------------")

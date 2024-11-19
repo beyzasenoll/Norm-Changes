@@ -176,4 +176,3 @@ class PlotManager:
         plt.grid(True)
         plt.show()
 
-
