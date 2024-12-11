@@ -176,3 +176,25 @@ class PlotManager:
         plt.grid(True)
         plt.show()
 
+    @staticmethod
+    def _plot_action_percentages(stepwise_percentages):
+        """Plot the percentage of actions A and B across simulation steps."""
+        steps = np.arange(len(stepwise_percentages))
+        percentages_A = [p[0] for p in stepwise_percentages]
+        percentages_B = [p[1] for p in stepwise_percentages]
+
+        bar_width = 0.4
+        plt.figure(figsize=(10, 6))
+
+        plt.bar(steps - bar_width / 2, percentages_A, width=bar_width, label='Action A (%)', color='#4CAF50')
+        plt.bar(steps + bar_width / 2, percentages_B, width=bar_width, label='Action B (%)', color='#FF5733')
+
+        plt.xlabel('Simulation Steps', fontsize=12)
+        plt.ylabel('Percentage of Actions (%)', fontsize=12)
+        plt.title('Percentage of Actions A and B Over Simulation Steps', fontsize=14)
+        plt.xticks(steps)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+

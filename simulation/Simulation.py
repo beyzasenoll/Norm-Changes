@@ -110,30 +110,33 @@ class Simulation:
         """Run multiple simulations and track whether 'AA' or 'BB' dominates."""
         aa_wins = 0
         bb_wins = 0
+        stepwise_percentages = []
 
         for sim in range(num_simulations):
+            print(f"Running Simulation {sim + 1}/{num_simulations}")
             self.run_simulation()
 
             count_A = 0
             count_B = 0
 
-            for agent in range(self.num_agents):
-                agent = self.agents[agent]
-                last_action_1 = agent.last_action
-
-                if last_action_1 == 'A':
+            for agent in self.agents:
+                if agent.last_action == 'A':
                     count_A += 1
-
-                elif last_action_1 == 'B':
+                elif agent.last_action == 'B':
                     count_B += 1
-            if count_A >= self.num_agents * 0.9:
+
+            percentage_A = (count_A / self.num_agents) * 100
+            percentage_B = (count_B / self.num_agents) * 100
+            stepwise_percentages.append((percentage_A, percentage_B))
+
+            if percentage_A >= 90:
                 aa_wins += 1
-            elif count_B >= self.num_agents * 0.9:
+            elif percentage_B >= 90:
                 bb_wins += 1
 
-            print(sim)
             self.reset_manager.reset_simulation(self)
 
+        PlotManager._plot_action_percentages(stepwise_percentages)
         PlotManager.plot_aa_vs_bb_results(aa_wins, bb_wins)
 
     def simulation_different_agent_size(self, num_simulations=50):
