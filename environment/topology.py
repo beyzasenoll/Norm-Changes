@@ -1,42 +1,85 @@
 import random
 
+import random
+
 
 class Topology:
-    def _form_pairs_with_toroidal_topology(self, episode, grid_height, grid_width):
-        """Form pairs of agents based on toroidal grid topology."""
+    def _get_neighbors(self, row, col, grid_height, grid_width, degree):
+        """Get neighbors of a specific degree (1st, 2nd, 3rd) in a toroidal grid."""
+        neighbors = set()
+
+        if degree >= 1:
+            # 1st-degree neighbors (direct neighbors)
+            neighbors.update([
+                ((row + 1) % grid_height, col),  # Below
+                ((row - 1) % grid_height, col),  # Above
+                (row, (col + 1) % grid_width),  # Right
+                (row, (col - 1) % grid_width)  # Left
+            ])
+
+        if degree >= 2:
+            # 2nd-degree neighbors (neighbors of 1st-degree neighbors)
+            for r, c in neighbors.copy():
+                neighbors.update([
+                    ((r + 1) % grid_height, c),
+                    ((r - 1) % grid_height, c),
+                    (r, (c + 1) % grid_width),
+                    (r, (c - 1) % grid_width)
+                ])
+
+        if degree >= 3:
+            # 3rd-degree neighbors (neighbors of 2nd-degree neighbors)
+            for r, c in neighbors.copy():
+                neighbors.update([
+                    ((r + 1) % grid_height, c),
+                    ((r - 1) % grid_height, c),
+                    (r, (c + 1) % grid_width),
+                    (r, (c - 1) % grid_width)
+                ])
+
+        return neighbors
+
+    def _form_pairs_with_toroidal_topology(self, num_agents, grid_height, grid_width):
+        """Form pairs with toroidal topology considering 1st, 2nd, and 3rd-degree neighbors with different probabilities."""
         pairs = []
+        paired_agents = set()
 
-        if episode % 4 == 0:
-            # Right neighbor
-            for row in range(grid_height):
-                for col in range(0, grid_width, 2):
-                    agent1_id = row * grid_width + col
-                    agent2_id = row * grid_width + (col + 1) % grid_width
-                    pairs.append((agent1_id, agent2_id))
+        for agent_id in range(num_agents):
+            if agent_id in paired_agents:
+                continue
 
-        elif episode % 4 == 1:
-            # Left neighbor
-            for row in range(grid_height):
-                for col in range(0, grid_width, 2):
-                    agent1_id = row * grid_width + col
-                    agent2_id = row * grid_width + (col - 1) % grid_width
-                    pairs.append((agent1_id, agent2_id))
+            row, col = divmod(agent_id, grid_width)
 
-        elif episode % 4 == 2:
-            # Below neighbor
-            for col in range(grid_width):
-                for row in range(0, grid_height, 2):
-                    agent1_id = row * grid_width + col
-                    agent2_id = ((row + 1) % grid_height) * grid_width + col
-                    pairs.append((agent1_id, agent2_id))
+            # Get neighbors of different degrees
+            first_degree_neighbors = self._get_neighbors(row, col, grid_height, grid_width, 1)
+            second_degree_neighbors = self._get_neighbors(row, col, grid_height, grid_width, 2) - first_degree_neighbors
+            third_degree_neighbors = self._get_neighbors(row, col, grid_height, grid_width,
+                                                         3) - first_degree_neighbors - second_degree_neighbors
 
-        else:
-            # Above neighbor
-            for col in range(grid_width):
-                for row in range(0, grid_height, 2):
-                    agent1_id = row * grid_width + col
-                    agent2_id = ((row - 1) % grid_height) * grid_width + col
-                    pairs.append((agent1_id, agent2_id))
+            # Convert neighbors to agent IDs
+            first_degree_ids = [r * grid_width + c for r, c in first_degree_neighbors if
+                                (r * grid_width + c) not in paired_agents]
+            second_degree_ids = [r * grid_width + c for r, c in second_degree_neighbors if
+                                 (r * grid_width + c) not in paired_agents]
+            third_degree_ids = [r * grid_width + c for r, c in third_degree_neighbors if
+                                (r * grid_width + c) not in paired_agents]
+
+            # Weighted random selection based on probabilities
+            probabilities = []
+            if first_degree_ids:
+                probabilities.extend([(neighbor, 0.5) for neighbor in first_degree_ids])
+            if second_degree_ids:
+                probabilities.extend([(neighbor, 0.3) for neighbor in second_degree_ids])
+            if third_degree_ids:
+                probabilities.extend([(neighbor, 0.2) for neighbor in third_degree_ids])
+
+            if probabilities:
+                neighbors, weights = zip(*probabilities)
+                chosen_neighbor = random.choices(neighbors, weights=weights, k=1)[0]
+
+                pairs.append((agent_id, chosen_neighbor))
+                paired_agents.add(agent_id)
+                paired_agents.add(chosen_neighbor)
 
         return pairs
 

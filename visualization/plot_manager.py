@@ -20,19 +20,34 @@ class PlotManager:
         plt.legend()
         plt.show()
 
+    import matplotlib.pyplot as plt
+
     @staticmethod
     def plot_q_values(scores_history, num_agents):
         """Plot the evolution of average Q-values for actions 'A' and 'B' over time for all agents."""
         plt.figure(figsize=(8, 6))
-        num_timesteps = len(scores_history[0]['A'])
+
+        # Tüm ajanların sahip olduğu en uzun timestep sayısını belirleyin
+        num_timesteps = max(len(scores_history[agent_id]['A']) for agent_id in range(num_agents))
+
         avg_qval_A, avg_qval_B = [], []
 
         for t in range(num_timesteps):
-            sum_qval_A = sum(scores_history[agent_id]['A'][t] for agent_id in range(num_agents))
-            sum_qval_B = sum(scores_history[agent_id]['B'][t] for agent_id in range(num_agents))
-            avg_qval_A.append(sum_qval_A / num_agents)
-            avg_qval_B.append(sum_qval_B / num_agents)
+            sum_qval_A = 0
+            sum_qval_B = 0
+            count = 0
 
+            for agent_id in range(num_agents):
+                if t < len(scores_history[agent_id]['A']) and t < len(scores_history[agent_id]['B']):
+                    sum_qval_A += scores_history[agent_id]['A'][t]
+                    sum_qval_B += scores_history[agent_id]['B'][t]
+                    count += 1
+
+            # Ajan sayısına bölerek ortalamayı hesaplayın (0'a bölme hatasını önlemek için kontrol ekleyin)
+            avg_qval_A.append(sum_qval_A / count if count > 0 else 0.0)
+            avg_qval_B.append(sum_qval_B / count if count > 0 else 0.0)
+
+        # Q-value'ları çizdirin
         plt.plot(avg_qval_A, label='Average Q-value for Action A', color='blue')
         plt.plot(avg_qval_B, label='Average Q-value for Action B', color='orange')
         plt.xlabel('Timestep')

@@ -1,5 +1,3 @@
-import random
-
 import networkx as nx
 
 from agents.agent import Agent
@@ -30,6 +28,7 @@ class Simulation:
 
         self.grid_width = 10
         self.grid_height = int(self.num_agents / self.grid_width)
+        self.topology = Topology()
 
         if self.topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(self.num_agents, 2)
@@ -41,11 +40,12 @@ class Simulation:
 
             # Generate pairs based on topology
             if self.topology_type == 'toroidal':
-                self.pairs = Topology._form_pairs_with_toroidal_topology(self, step, self.grid_height, self.grid_width)
+                self.pairs = self.topology._form_pairs_with_toroidal_topology(self.num_agents, self.grid_height,
+                                                                              self.grid_width)
             elif self.topology_type == 'scale-free':
-                self.pairs = Topology._form_pairs_with_scale_free_topology(self, self.num_agents, self.scale_free_graph)
+                self.pairs = self.topology._form_pairs_with_scale_free_topology(self.num_agents, self.scale_free_graph)
             elif self.topology_type == 'random':
-                self.pairs = Topology._form_pairs_randomly(self, self.num_agents)
+                self.pairs = self.topology._form_pairs_randomly(self.num_agents)
 
             for agent1_id, agent2_id in self.pairs:
                 agent1 = self.agents[agent1_id]
