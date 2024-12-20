@@ -27,7 +27,6 @@ class PlotManager:
         """Plot the evolution of average Q-values for actions 'A' and 'B' over time for all agents."""
         plt.figure(figsize=(8, 6))
 
-        # Tüm ajanların sahip olduğu en uzun timestep sayısını belirleyin
         num_timesteps = max(len(scores_history[agent_id]['A']) for agent_id in range(num_agents))
 
         avg_qval_A, avg_qval_B = [], []
@@ -43,11 +42,9 @@ class PlotManager:
                     sum_qval_B += scores_history[agent_id]['B'][t]
                     count += 1
 
-            # Ajan sayısına bölerek ortalamayı hesaplayın (0'a bölme hatasını önlemek için kontrol ekleyin)
             avg_qval_A.append(sum_qval_A / count if count > 0 else 0.0)
             avg_qval_B.append(sum_qval_B / count if count > 0 else 0.0)
 
-        # Q-value'ları çizdirin
         plt.plot(avg_qval_A, label='Average Q-value for Action A', color='blue')
         plt.plot(avg_qval_B, label='Average Q-value for Action B', color='orange')
         plt.xlabel('Timestep')
@@ -192,7 +189,7 @@ class PlotManager:
         plt.show()
 
     @staticmethod
-    def _plot_action_percentages(stepwise_percentages):
+    def plot_action_percentages(stepwise_percentages):
         """Plot the percentage of actions A and B across simulation steps."""
         steps = np.arange(len(stepwise_percentages))
         percentages_A = [p[0] for p in stepwise_percentages]

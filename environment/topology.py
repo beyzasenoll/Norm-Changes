@@ -39,8 +39,9 @@ class Topology:
 
         return neighbors
 
-    def _form_pairs_with_toroidal_topology(self, num_agents, grid_height, grid_width):
-        """Form pairs with toroidal topology considering 1st, 2nd, and 3rd-degree neighbors with different probabilities."""
+    def form_pairs_with_toroidal_topology(self, num_agents, grid_height, grid_width):
+        """Form pairs with toroidal topology considering 1st, 2nd, and 3rd-degree neighbors with different
+        probabilities."""
         pairs = []
         paired_agents = set()
 
@@ -83,7 +84,7 @@ class Topology:
 
         return pairs
 
-    def _form_pairs_with_scale_free_topology(self,num_agents,scale_free_graph):
+    def form_pairs_with_scale_free_topology(self, num_agents, scale_free_graph):
         edges = list(scale_free_graph.edges)
 
         random.shuffle(edges)
@@ -103,7 +104,7 @@ class Topology:
 
         return pairs
 
-    def _form_pairs_randomly(self,num_agents):
+    def form_pairs_randomly(self, num_agents):
         """Pair agents randomly for each timestep, returning agent indices."""
         agent_indices = list(range(num_agents))
         random.shuffle(agent_indices)

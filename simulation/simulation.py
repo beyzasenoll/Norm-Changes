@@ -11,6 +11,7 @@ from visualization.plot_manager import PlotManager
 class Simulation:
     def __init__(self, num_agents, num_steps, alpha=0.1, gamma=0.95, epsilon=0.1, temperature=100,
                  topology_type="toroidal"):
+        self.pairs = None
         self.num_agents = num_agents
         self.num_steps = num_steps
         self.topology_type = topology_type
@@ -61,19 +62,20 @@ class Simulation:
                 self._calculate_and_update_rewards_default(agent1, agent2, action1, action2)
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
+
     def _generate_pairs(self):
         if self.topology_type == 'toroidal':
-            return self.topology._form_pairs_with_toroidal_topology(self.num_agents, self.grid_height, self.grid_width)
+            return self.topology.form_pairs_with_toroidal_topology(self.num_agents, self.grid_height, self.grid_width)
         elif self.topology_type == 'scale-free':
-            return self.topology._form_pairs_with_scale_free_topology(self.num_agents, self.scale_free_graph)
+            return self.topology.form_pairs_with_scale_free_topology(self.num_agents, self.scale_free_graph)
         elif self.topology_type == 'random':
-            return self.topology._form_pairs_randomly(self.num_agents)
+            return self.topology.form_pairs_randomly(self.num_agents)
         else:
             raise ValueError(f"Unsupported topology type: {self.topology_type}")
 
     def _calculate_and_update_rewards_norm_change(self, agent1, agent2, action1, action2, reward):
         # Calculate rewards based on norm change
-        reward1, reward2 = Reward._calculate_rewards_norm_change_(
+        reward1, reward2 = Reward.calculate_rewards_norm_change_(
             action1, action2, self.norm_checker.less_action, reward
         )
 
@@ -92,7 +94,7 @@ class Simulation:
 
     def _calculate_and_update_rewards_default(self, agent1, agent2, action1, action2):
         # Calculate rewards using default method
-        reward1, reward2 = Reward._calculate_rewards(action1, action2)
+        reward1, reward2 = Reward.calculate_rewards(action1, action2)
 
         if reward1 is None or reward2 is None:
             raise ValueError(f"Reward values should not be None: reward1={reward1}, reward2={reward2}")

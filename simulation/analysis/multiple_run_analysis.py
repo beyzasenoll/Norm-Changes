@@ -35,5 +35,5 @@ class SimulationMultipleRunAnalysis:
 
             self.simulation.reset_manager.reset_simulation(self.simulation)
 
-        PlotManager._plot_action_percentages(stepwise_percentages)
+        PlotManager.plot_action_percentages(stepwise_percentages)
         PlotManager.plot_aa_vs_bb_results(aa_wins, bb_wins)
