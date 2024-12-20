@@ -1,6 +1,6 @@
 import numpy as np
 
-from simulation.norm_checker import NormChecker
+from simulation.norm_changes.norm_checker import NormChecker
 from visualization.plot_manager import PlotManager
 
 
