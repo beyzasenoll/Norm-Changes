@@ -1,5 +1,5 @@
 from simulation.norm_changes import NormChanges
-from simulation.Simulation import Simulation
+from simulation.simulation import Simulation
 from simulation.norm_changes.emergence_check import SimulationWithEmergence
 from simulation.analysis.trendsetter_analysis import SimulationTrendsetterAnalysis
 from simulation.analysis.agent_size_analysis import SimulationAgentSizeAnalysis
