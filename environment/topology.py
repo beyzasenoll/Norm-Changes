@@ -1,7 +1,5 @@
 import random
 
-import random
-
 
 class Topology:
     def _get_neighbors(self, row, col, grid_height, grid_width, degree):
@@ -65,22 +63,35 @@ class Topology:
             third_degree_ids = [r * grid_width + c for r, c in third_degree_neighbors if
                                 (r * grid_width + c) not in paired_agents]
 
-            # Weighted random selection based on probabilities
-            probabilities = []
+            # Circle probabilities
+            circle_probabilities = [(1, 0.3), (2, 0.4), (3, 0.3)]
+            available_circles = []
+
             if first_degree_ids:
-                probabilities.extend([(neighbor, 0.5) for neighbor in first_degree_ids])
+                available_circles.append(1)
             if second_degree_ids:
-                probabilities.extend([(neighbor, 0.3) for neighbor in second_degree_ids])
+                available_circles.append(2)
             if third_degree_ids:
-                probabilities.extend([(neighbor, 0.2) for neighbor in third_degree_ids])
+                available_circles.append(3)
 
-            if probabilities:
-                neighbors, weights = zip(*probabilities)
-                chosen_neighbor = random.choices(neighbors, weights=weights, k=1)[0]
+            # Normalize probabilities based on available circles
+            normalized_probs = [p for circle, p in circle_probabilities if circle in available_circles]
+            normalized_probs = [p / sum(normalized_probs) for p in normalized_probs]
 
-                pairs.append((agent_id, chosen_neighbor))
-                paired_agents.add(agent_id)
-                paired_agents.add(chosen_neighbor)
+            # Randomly select a circle based on adjusted probabilities
+            selected_circle = random.choices(available_circles, weights=normalized_probs, k=1)[0]
+
+            # Choose a random agent from the selected circle
+            if selected_circle == 1:
+                chosen_neighbor = random.choice(first_degree_ids)
+            elif selected_circle == 2:
+                chosen_neighbor = random.choice(second_degree_ids)
+            else:
+                chosen_neighbor = random.choice(third_degree_ids)
+
+            pairs.append((agent_id, chosen_neighbor))
+            paired_agents.add(agent_id)
+            paired_agents.add(chosen_neighbor)
 
         return pairs
 

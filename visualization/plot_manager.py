@@ -20,7 +20,6 @@ class PlotManager:
         plt.legend()
         plt.show()
 
-    import matplotlib.pyplot as plt
 
     @staticmethod
     def plot_q_values(scores_history, num_agents):

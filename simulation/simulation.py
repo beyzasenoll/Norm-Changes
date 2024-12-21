@@ -1,3 +1,4 @@
+import logging
 import networkx as nx
 
 from agents.agent import Agent
@@ -6,6 +7,10 @@ from environment.topology import Topology
 from simulation.norm_changes.norm_checker import NormChecker
 from simulation.reset_manager import ResetManager
 from visualization.plot_manager import PlotManager
+
+# Configure logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class Simulation:
@@ -35,9 +40,12 @@ class Simulation:
         if topology_type == 'scale-free':
             self.scale_free_graph = nx.barabasi_albert_graph(num_agents, 2)
 
+        logger.info(f"Simulation initialized with {num_agents} agents and {num_steps} steps.")
+
     def run_simulation(self, reward=None):
         """Run the simulation for a specified number of steps."""
         for step in range(self.num_steps):
+            logger.info(f"Step {step}/{self.num_steps}")
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
             self.pairs = self._generate_pairs()
@@ -49,7 +57,8 @@ class Simulation:
                 action1 = agent1.choose_action_boltzmann(step)
                 action2 = agent2.choose_action_boltzmann(step)
 
-                # Update action counts
+                logger.debug(f"Agent {agent1_id} chose {action1}, Agent {agent2_id} chose {action2}")
+
                 if action1 == 'A' and action2 == 'A':
                     count_AA += 1
                 elif action1 == 'B' and action2 == 'B':
@@ -62,6 +71,8 @@ class Simulation:
                 self._calculate_and_update_rewards_default(agent1, agent2, action1, action2)
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
+            logger.info(
+                f"Step {step} completed. Action counts: AA={count_AA}, BB={count_BB}, AB={count_AB}, BA={count_BA}")
 
     def _generate_pairs(self):
         if self.topology_type == 'toroidal':
@@ -75,11 +86,13 @@ class Simulation:
 
     def _calculate_and_update_rewards_norm_change(self, agent1, agent2, action1, action2, reward):
         # Calculate rewards based on norm change
+        logger.debug(f"Calculating rewards for action pair: ({action1}, {action2})")
         reward1, reward2 = Reward.calculate_rewards_norm_change_(
             action1, action2, self.norm_checker.less_action, reward
         )
 
         if reward1 is None or reward2 is None:
+            logger.error(f"Reward values should not be None: reward1={reward1}, reward2={reward2}")
             raise ValueError(f"Reward values should not be None: reward1={reward1}, reward2={reward2}")
 
         # Update Q-values for both agents
@@ -94,9 +107,11 @@ class Simulation:
 
     def _calculate_and_update_rewards_default(self, agent1, agent2, action1, action2):
         # Calculate rewards using default method
+        logger.debug(f"Calculating default rewards for action pair: ({action1}, {action2})")
         reward1, reward2 = Reward.calculate_rewards(action1, action2)
 
         if reward1 is None or reward2 is None:
+            logger.error(f"Reward values should not be None: reward1={reward1}, reward2={reward2}")
             raise ValueError(f"Reward values should not be None: reward1={reward1}, reward2={reward2}")
 
         # Update Q-values for both agents
@@ -116,6 +131,7 @@ class Simulation:
         self.action_combinations['BA'].append(count_BA)
 
     def plot_simulation_results(self):
+        logger.info("Plotting simulation results...")
         PlotManager.plot_action_combinations(self.action_combinations)
         PlotManager.plot_q_values(self.scores_history, self.num_agents)
         PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
