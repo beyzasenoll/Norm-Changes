@@ -34,6 +34,7 @@ class SimulationMultipleRunAnalysis:
                 bb_wins += 1
 
             self.simulation.reset_manager.reset_simulation(self.simulation)
+        print(f"emerged {aa_wins + bb_wins}")
 
         PlotManager.plot_action_percentages(stepwise_percentages)
         PlotManager.plot_aa_vs_bb_results(aa_wins, bb_wins)

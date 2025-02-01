@@ -22,15 +22,13 @@ class PlotManager:
 
 
     @staticmethod
-    def plot_q_values(scores_history, num_agents):
+    def plot_q_values(scores_history, num_agents,num_steps):
         """Plot the evolution of average Q-values for actions 'A' and 'B' over time for all agents."""
         plt.figure(figsize=(8, 6))
 
-        num_timesteps = max(len(scores_history[agent_id]['A']) for agent_id in range(num_agents))
-
         avg_qval_A, avg_qval_B = [], []
 
-        for t in range(num_timesteps):
+        for t in range(num_steps):
             sum_qval_A = 0
             sum_qval_B = 0
             count = 0

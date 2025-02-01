@@ -64,7 +64,7 @@ class Topology:
                                 (r * grid_width + c) not in paired_agents]
 
             # Circle probabilities
-            circle_probabilities = [(1, 0.3), (2, 0.4), (3, 0.3)]
+            circle_probabilities = [(1, 0.5), (2, 0.3), (3, 0.2)]
             available_circles = []
 
             if first_degree_ids:

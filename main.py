@@ -8,7 +8,7 @@ from simulation.analysis.multiple_run_analysis import SimulationMultipleRunAnaly
 if __name__ == '__main__':
     num_agents = 40
     num_steps = 1500
-    num_simulations = 10
+    num_simulations = 2
 
     # Initialize the main simulation
     simulation = Simulation(
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # trendsetter_analysis.run_with_emergence_check_with_different_trendsetters(num_simulations=10)
 
     # Analyze norm emergence across different agent sizes
-    # agent_size_analysis.simulation_different_agent_size(num_simulations=10)
+    #agent_size_analysis.simulation_different_agent_size(num_simulations=5)
 
     # Run simulations with reward adjustments for norm changes
     # norm_changes_instance.run_after_update_reward(num_runs=10)

@@ -87,7 +87,7 @@ class Simulation:
     def _calculate_and_update_rewards_norm_change(self, agent1, agent2, action1, action2, reward):
         # Calculate rewards based on norm change
         logger.debug(f"Calculating rewards for action pair: ({action1}, {action2})")
-        reward1, reward2 = Reward.calculate_rewards_norm_change_(
+        reward1, reward2 = Reward.calculate_rewards(
             action1, action2, self.norm_checker.less_action, reward
         )
 
@@ -133,5 +133,5 @@ class Simulation:
     def plot_simulation_results(self):
         logger.info("Plotting simulation results...")
         PlotManager.plot_action_combinations(self.action_combinations)
-        PlotManager.plot_q_values(self.scores_history, self.num_agents)
+        PlotManager.plot_q_values(self.scores_history, self.num_agents,self.num_steps)
         PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
