@@ -1,5 +1,5 @@
 import random
-
+import networkx as nx
 
 class Topology:
     def _get_neighbors(self, row, col, grid_height, grid_width, degree):
@@ -121,3 +121,79 @@ class Topology:
         random.shuffle(agent_indices)
         pairs = [(agent_indices[i], agent_indices[i + 1]) for i in range(0, len(agent_indices) - 1, 2)]
         return pairs
+    
+    """
+    def form_pairs_with_small_world_topology(self, num_agents, p):
+        
+        Form pairs using a small-worl topology (Watts-Strogatz model) with Von Neumann neighborhood.
+        
+        Parameters:
+            - num_agents = Number of agents.
+            - p: probability of rewiring each edge.
+            
+        Returns:
+            - pairs: List of tuples representing paired agents.
+        
+        # Von Neumann neighborhood implies k=4 (up, down, left, right)
+        k = 4
+        
+        small_world_graph = nx.watts_strogatz_graph(num_agents, k, p)
+        
+        edges = list(small_world_graph.edges)
+        random.shuffle(edges)
+        
+        paired_agents = set()
+        pairs = []
+        
+        for edge in edges:
+            agent1_id, agent2_id = edge
+            if agent1_id not in paired_agents and agent2_id not in paired_agents:
+                pairs.append((agent1_id), (agent2_id))
+                paired_agents.add(agent1_id)
+                paired_agents.add(agent2_id)
+                
+            if len(paired_agents) >= num_agents:
+                break
+        return pairs
+
+        
+    """
+        
+    def form_pairs_with_small_world_topology(self, num_agents, grid_height, grid_width, p, degree=2):
+        """
+        Form pairs using a small-world topology with toroidal grid-based neighborhood expansion.
+        
+        
+        Parameters:
+            - num_agents: Number of agents.
+            - grid_height: Height of the toroidal grid.
+            - grid_width: Width of the toroidal grid.
+            - p: Probability of rewiring each edge.
+            - degree: Degree of neighborhood (1, 2, or 3)
+        
+        Returns:
+            - pairs: List of tuples representing paired agents.
+        """
+        
+        small_world_graph = nx.watts_strogatz_graph(num_agents, 4, p)
+        pairs = []
+        paired_agents = set()
+        
+        for agent_id in range(num_agents):
+            if agent_id in paired_agents:
+                continue
+            
+            row, col = divmod(agent_id, grid_width)
+            neighbors = self._get_neighbors(row, col, grid_height, grid_width, degree)
+            neighbor_ids = [r * grid_width + c for r, c in neighbors if (r * grid_width + c) not in paired_agents and (r * grid_width + c) < num_agents]
+            
+            if not neighbor_ids:
+                continue
+            
+            chosen_neighbor = random.choice(neighbor_ids)
+            pairs.append((agent_id, chosen_neighbor))
+            paired_agents.add(agent_id)
+            paired_agents.add(chosen_neighbor)
+        
+        return pairs
+        
