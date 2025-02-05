@@ -81,6 +81,8 @@ class Simulation:
             return self.topology.form_pairs_with_scale_free_topology(self.num_agents, self.scale_free_graph)
         elif self.topology_type == 'random':
             return self.topology.form_pairs_randomly(self.num_agents)
+        elif self.topology_type == 'small-world':
+            return self.topology.form_pairs_with_small_world_topology(self.num_agents, self.grid_height, self.grid_width, p= 0.1, degree= 2)
         else:
             raise ValueError(f"Unsupported topology type: {self.topology_type}")
 
