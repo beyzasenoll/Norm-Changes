@@ -64,7 +64,7 @@ class PlotManager:
         plt.show()
 
     @staticmethod
-    def plot_agent_actions_graph(agents, grid_height, grid_width):
+    def plot_agent_actions_graph_toroidal(agents, grid_height, grid_width):
         """Plot a graph-grid showing agents' final actions with colors and IDs."""
         G = nx.grid_2d_graph(grid_height, grid_width)
         pos = {node: (node[1], -node[0]) for node in G.nodes()}
@@ -81,6 +81,20 @@ class PlotManager:
         plt.title('Final Actions of Agents (Blue: A, Yellow: B)')
         plt.show()
 
+    def plot_agent_actions_graph_small_world(agents, num_agents, k ,p):
+        """Plot a Small-World topology graph showing agents' final actions with colors and IDs."""
+        topology_graph = nx.watts_strogatz_graph(num_agents, k=k, p=p)
+        pos = nx.spring_layout(topology_graph)
+
+        colors = ['blue' if agent.last_action == 'A' else 'orange' for agent in agents]
+        labels = {agent.agent_id: str(agent.agent_id) for agent in agents}
+
+        plt.figure(figsize=(8, 6))
+        nx.draw(topology_graph, pos, node_color=colors, with_labels=True, labels=labels,
+                node_size=500, font_size=10, font_color='white', font_weight='bold', edge_color='gray')
+        plt.title('Final Actions of Agents (Blue: A, Yellow: B) in Small-World Topology')
+        plt.show()
+
     @staticmethod
     def plot_aa_vs_bb_results(aa_wins, bb_wins):
         """Plot the result of AA vs BB wins in the final timestep across multiple simulations."""
@@ -94,98 +108,14 @@ class PlotManager:
         plt.title('AA vs BB Wins in the Final Timestep (Across Simulations)')
         plt.show()
 
-    def plot_norm_abandonment_vs_reward(self,reward_values, abandonment_percentages):
-        plt.figure(figsize=(10, 6))
-        plt.plot(reward_values, abandonment_percentages, marker='o', linestyle='--', color='b')
-        plt.xlabel("Reward for emerged norm")
-        plt.ylabel("Percentage of population abandoning previous emerged norm")
-        plt.title("Norm Abandonment vs. Reward for Emerged Norm")
-        plt.grid(True)
-        plt.show()
-
-    @staticmethod
-    def plot_norm_abandonment_vs_reward_multiple_topologies(reward_values, abandonment_percentages_by_topology):
-        plt.figure(figsize=(10, 6))
-        for topology, abandonment_percentages in abandonment_percentages_by_topology.items():
-            plt.plot(reward_values, abandonment_percentages, marker='o', linestyle='--',
-                     label=f'{topology.capitalize()} Topology')
-        plt.xlabel("Reward for emerged norm")
-        plt.ylabel("Average Percentage of population abandoning previous emerged norm")
-        plt.title("Average Norm Abandonment vs. Reward for Emerged Norm (Multiple Topologies)")
-        plt.grid(True)
-        plt.legend()
-        plt.show()
-
-    @staticmethod
-    def plot_trendsetters_vs_norms(trendsetter_ratios, emergence_percentages, abandonment_percentages):
-        plt.figure(figsize=(10, 6))
-
-        # Plotting the percentage of norm emergence
-        plt.plot(trendsetter_ratios, emergence_percentages, marker='o', linestyle='-', color='g',
-                 label='Percentage of Norm Emergence', linewidth=2, markersize=8)
-
-        # Plotting the percentage of norm abandonment
-        plt.plot(trendsetter_ratios, abandonment_percentages, marker='x', linestyle='--', color='r',
-                 label='Percentage of Norm Abandonment', linewidth=2, markersize=8)
-
-        # Adding labels and title
-        plt.xlabel("Trendsetters Ratio (0.1 to 0.5)", fontsize=12)
-        plt.ylabel("Percentage (%)", fontsize=12)
-        plt.title("Norm Emergence and Abandonment vs. Trendsetters Ratio", fontsize=14)
-
-        # Setting the x-ticks with appropriate labels
-        plt.xticks(np.arange(0.1, 0.6, 0.05))
-        plt.yticks(np.arange(0, 110, 10))  # Y-axis ticks from 0 to 100
-
-        plt.ylim(0, 110)  # Setting the y-axis limits
-        plt.grid(True, linestyle='--', alpha=0.7)  # Adding a grid for better readability
-        plt.legend(fontsize=12)  # Adjusting the legend font size
-
-        # Display the plot
-        plt.tight_layout()  # Adjust layout to fit labels and title
-        plt.show()
 
     @staticmethod
     def plot_simulation_results(action_combinations, scores_history, agents, grid_height, grid_width):
         PlotManager.plot_action_combinations(action_combinations)
         PlotManager.plot_q_values(scores_history, len(agents))
-        PlotManager.plot_agent_actions_graph(agents, grid_height, grid_width)
+        PlotManager.plot_agent_actions_graph_toroidal(agents, grid_height, grid_width)
 
-    @staticmethod
-    def plot_abandonment_percentages_by_ratio(abandonment_percentages_by_ratio):
-        """Plot the norm abandonment percentages by trendsetter ratio."""
-        plt.figure(figsize=(10, 6))
-        plt.plot(list(abandonment_percentages_by_ratio.keys()), list(abandonment_percentages_by_ratio.values()),
-                 marker='o')
-        plt.title("Norm Abandonment Percentage by Trendsetter Ratio")
-        plt.xlabel("Trendsetter Ratio")
-        plt.ylabel("Norm Abandonment Percentage (%)")
-        plt.grid(True)
-        plt.show()
 
-    @staticmethod
-    def plot_abandonment_percentage(avg_abandonment_percentages):
-        """Plot the average norm abandonment percentage by trendsetter ratio."""
-        plt.figure(figsize=(10, 6))
-        plt.plot(list(avg_abandonment_percentages.keys()), list(avg_abandonment_percentages.values()), marker='o')
-        plt.title("Average Norm Abandonment Percentage by Trendsetter Ratio")
-        plt.xlabel("Trendsetter Ratio")
-        plt.ylabel("Average Norm Abandonment Percentage (%)")
-        plt.grid(True)
-        plt.show()
-
-    @staticmethod
-    def plot_norm_emergence(agent_sizes, avg_norm_counts):
-        """Plot the average norm emergence percentage for different agent sizes."""
-        plt.figure(figsize=(10, 6))
-        plt.plot(agent_sizes, avg_norm_counts, marker='o')
-        plt.title("Average Norm Emergence Percentage by Agent Size")
-        plt.xlabel("Number of Agents")
-        plt.ylabel("Average Percentage Count of Dominant Action")
-        plt.grid(True)
-        plt.show()
-
-    @staticmethod
     def plot_action_percentages(stepwise_percentages):
         """Plot the percentage of actions A and B across simulation steps."""
         steps = np.arange(len(stepwise_percentages))
