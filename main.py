@@ -31,8 +31,6 @@ if __name__ == '__main__':
 
     # Run simulation
     simulation.run_simulation()
-    simulation.plot_simulation_results()
-
     # Run a single simulation with emergence check
     # emergence_analysis.run_with_emergence_check()
 

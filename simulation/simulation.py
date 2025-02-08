@@ -73,6 +73,8 @@ class Simulation:
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
             logger.info(
                 f"Step {step} completed. Action counts: AA={count_AA}, BB={count_BB}, AB={count_AB}, BA={count_BA}")
+            a = self.get_global_max_min_q_values()
+            print(a)
 
     def _generate_pairs(self):
         if self.topology_type == 'toroidal':
@@ -137,3 +139,20 @@ class Simulation:
         PlotManager.plot_action_combinations(self.action_combinations)
         PlotManager.plot_q_values(self.scores_history, self.num_agents,self.num_steps)
         PlotManager.plot_agent_actions_graph(self.agents, self.grid_height, self.grid_width)
+
+    def get_global_max_min_q_values(self):
+        """
+        Calculate the global maximum and minimum Q-values across all agents and steps.
+        Returns a dictionary with the global max and min Q-values.
+        """
+        all_q_values = []
+
+        for agent_id in range(self.num_agents):
+            q_values_A = self.scores_history[agent_id]['A']
+            q_values_B = self.scores_history[agent_id]['B']
+            all_q_values.extend(q_values_A + q_values_B)
+
+        max_q = max(all_q_values) if all_q_values else None
+        min_q = min(all_q_values) if all_q_values else None
+
+        return {'global_max_q': max_q, 'global_min_q': min_q}
