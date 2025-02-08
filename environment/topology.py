@@ -24,7 +24,26 @@ class Topology:
             self.graph = nx.barabasi_albert_graph(num_agents, k)
         else:
             self.graph = None  # No explicit graph for random and toroidal topologies
+    def _get_neighbors_von_neumann(self, row, col, grid_height, grid_width):
+        """Get Von Neumann neighbors (up, down, left, right) in a toroidal grid."""
+        neighbors = {((row + 1) % grid_height, col), ((row - 1) % grid_height, col), (row, (col + 1) % grid_width),
+                     (row, (col - 1) % grid_width)}
+        return neighbors
 
+    def calculate_beta_distance(self, row, col, grid_height, grid_width, beta):
+        """Calculate observable neighbors based on Von Neumann topology and Beta scaling."""
+        max_distance = max(grid_height, grid_width)
+        observation_range = int(beta * max_distance)
+
+        neighbors = set()
+        for d in range(1, observation_range + 1):
+            neighbors.update([
+                ((row + d) % grid_height, col),
+                ((row - d) % grid_height, col),
+                (row, (col + d) % grid_width),
+                (row, (col - d) % grid_width)
+            ])
+        return neighbors
     def _get_neighbors_toroidal(self, row, col, degree):
         """
         Get neighbors of a specific degree in a toroidal grid.
