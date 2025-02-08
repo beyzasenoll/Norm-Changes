@@ -3,6 +3,7 @@ from environment.topology import Topology
 
 
 class Agent:
+    TRENDSETTER_THRESHOLD = 0.95  # Q(B) threshold for trendsetters
     def __init__(
         self,
         agent_id,
@@ -17,10 +18,11 @@ class Agent:
         observation_beta=0.5,
         window_size=5,
         network_graph=None,
+        is_trendsetter=False
     ):
         self.agent_id = agent_id
         self.actions = ['A', 'B']
-        self.q_values = {'A': 0.96, 'B': 0.04}  # Initial Q-values
+        self.q_values = {'A': 0.96, 'B': 0.96 if is_trendsetter else 0.04}
         self.alpha = alpha  # Learning rate
         self.gamma = gamma  # Discount factor
         self.epsilon = epsilon  # Exploration rate
@@ -30,6 +32,7 @@ class Agent:
         self.grid_width = int(num_agents**0.5)
         self.grid_height = int(num_agents**0.5)
         self.window_size = window_size  # Window size for experience calculation
+        self.is_trendsetter = is_trendsetter
 
         # Utility function weights
         self.w1 = w1  # Q-value weight
