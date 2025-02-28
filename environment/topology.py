@@ -160,10 +160,14 @@ class Topology:
 
             neighbors = self.get_neighbors(agent_id, allowed_circles)
 
-            if neighbors:
-                chosen_neighbor = random.choice(list(neighbors))
+            # Ensure neighbors are within valid range
+            valid_neighbors = [n for n in neighbors if n < self.num_agents and n != agent_id]
+
+            if valid_neighbors:
+                chosen_neighbor = random.choice(valid_neighbors)
                 pairs.append((agent_id, chosen_neighbor))
                 used_agents.add(agent_id)
+                used_agents.add(chosen_neighbor)
 
         return pairs
 

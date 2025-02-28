@@ -1,3 +1,5 @@
+from simulation.reset_manager import ResetManager
+from simulation.simulation import Simulation
 from visualization.plot_manager import PlotManager
 
 
@@ -33,7 +35,7 @@ class SimulationMultipleRunAnalysis:
             elif percentage_B >= 90:
                 bb_wins += 1
 
-            self.simulation.reset_manager.reset_simulation(self.simulation)
+            ResetManager.reset_simulation(self.simulation)
         print(f"emerged {aa_wins + bb_wins}")
 
         PlotManager.plot_action_percentages(stepwise_percentages)
