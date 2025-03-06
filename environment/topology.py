@@ -167,7 +167,6 @@ class Topology:
                 chosen_neighbor = random.choice(valid_neighbors)
                 pairs.append((agent_id, chosen_neighbor))
                 used_agents.add(agent_id)
-                used_agents.add(chosen_neighbor)
             else:
                 print(f"⚠️ Agent {agent_id} has no valid neighbors!")
 
