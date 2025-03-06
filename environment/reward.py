@@ -4,4 +4,4 @@ class Reward:
         """Calculate rewards based on actions."""
         if action1 == action2:
             return 1, 1
-        return 0, 0
+        return -1, -1

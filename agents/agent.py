@@ -10,7 +10,7 @@ class Agent:
         gamma=0.95,
         epsilon=0.1,
         temperature=100,
-        weights=[0.5, 0.3, 0.2],
+        weights=[1.0, 0.0, 0.0],
         num_agents=40,
         observation_beta=0.5,
         window_size=5,
@@ -93,16 +93,22 @@ class Agent:
 
         return action_rate
 
-    def update_q_value(self, actions, reward):
+    def update_q_value(self, action, reward):
         """
-        Update the Q-value for the given actions based on the received reward.
-        :param actions: List of actions taken during the current timestep.
-        :param reward: Reward received for the actions.
-        """
-        for action in actions:
-            self.q_values[action] += self.alpha * (reward - self.q_values[action])
+        Update the Q-value for the given action based on the received reward.
 
-        self.past_window['actions'].append(actions)
+        :param action: The action taken during the current timestep.
+        :param reward: Reward received for the action.
+        """
+        self.q_values[action] += self.alpha * (reward - self.q_values[action])
+
+    def update_past_actions(self, action):
+        """
+        Update the past actions window with the latest action.
+
+        :param action: The action to be added to the past window.
+        """
+        self.past_window['actions'].append(action)
 
         if len(self.past_window['actions']) > self.window_size:
             self.past_window['actions'].pop(0)

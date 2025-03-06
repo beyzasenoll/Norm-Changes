@@ -1,6 +1,5 @@
 import logging
 
-import numpy as np
 
 from agents.agent import Agent
 from environment.reward import Reward
@@ -17,7 +16,7 @@ class Simulation:
     A simulation environment for agents interacting in a network topology.
     """
 
-    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2, circle_degree=[1, 2]):
+    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2, circle_degree=[1]):
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
         self.num_agents = num_agents
@@ -35,7 +34,9 @@ class Simulation:
         Run the simulation for the specified number of timesteps.
         """
         for step in range(self.num_steps):
-            logger.info(f"Step {step}: Running simulation step.")
+            if step % 100 == 0:
+                logger.info(f"Step {step}: Running simulation step.")
+
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
 
             for agent1_id, agent2_id in self.pairs:
@@ -61,11 +62,15 @@ class Simulation:
 
                 reward1, reward2 = Reward.calculate_rewards(action1, action2)
                 agent1.update_q_value(action1, reward1)
+                agent1.update_past_actions(action1)
                 agent2.update_q_value(action2, reward2)
+                agent2.update_past_actions(action2)
+
 
                 self._update_scores_history(agent1, agent2)
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
+        print(f"sum of action count", count_AA+count_BB+count_AB+count_BA)
 
     def _update_action_counts(self, count_AA, count_BB, count_AB, count_BA):
         """

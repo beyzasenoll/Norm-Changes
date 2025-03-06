@@ -10,7 +10,7 @@ if __name__ == '__main__':
     simulation = Simulation(
         num_agents=num_agents,
         num_steps=num_steps,
-        topology_type="small_world",
+        topology_type="toroidal",
         k=4,
         p=0.2
     )
