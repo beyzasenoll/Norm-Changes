@@ -24,10 +24,11 @@ class Simulation:
         self.topology_type=topology_type
         self.beta = beta
         self.topology = Topology(num_agents, topology_type=topology_type, k=k, p=p)
-        self.pairs = self.topology.form_pairs(circle_degree)
+        self.pairs = None
         self.agents = [Agent(i, observation_beta=beta) for i in range(num_agents)]
         self.k = k
         self.p = p
+        self.circle_degree=circle_degree
 
     def run_simulation(self):
         """
@@ -38,6 +39,7 @@ class Simulation:
                 logger.info(f"Step {step}: Running simulation step.")
 
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
+            self.pairs = self.topology.form_pairs(self.circle_degree)
 
             for agent1_id, agent2_id in self.pairs:
                 if agent2_id >= self.num_agents:

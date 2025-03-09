@@ -170,7 +170,6 @@ class Topology:
             else:
                 print(f"⚠️ Agent {agent_id} has no valid neighbors!")
 
-        print(f"✅ Total pairs formed: {len(pairs)} (Expected: {self.num_agents})")
         return pairs
 
 
