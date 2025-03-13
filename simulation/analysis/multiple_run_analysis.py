@@ -7,7 +7,7 @@ class SimulationMultipleRunAnalysis:
     def __init__(self, simulation):
         self.simulation = simulation
 
-    def run_multiple_simulations(self, num_simulations=20):
+    def run_multiple_simulations(self, num_simulations=3):
         """Run multiple simulations and track whether 'AA' or 'BB' dominates."""
         aa_wins = 0
         bb_wins = 0
@@ -38,5 +38,5 @@ class SimulationMultipleRunAnalysis:
             ResetManager.reset_simulation(self.simulation)
         print(f"emerged {aa_wins + bb_wins}")
 
-        PlotManager.plot_action_percentages(stepwise_percentages)
+        #PlotManager.plot_action_percentages(stepwise_percentages)
         PlotManager.plot_aa_vs_bb_results(aa_wins, bb_wins)

@@ -9,7 +9,7 @@ class Agent:
         alpha=0.05,
         gamma=0.95,
         epsilon=0.1,
-        temperature=100,
+        temperature=5,
         weights=[1.0, 0.0, 0.0],
         num_agents=40,
         observation_beta=0.5,
@@ -113,7 +113,7 @@ class Agent:
         if len(self.past_window['actions']) > self.window_size:
             self.past_window['actions'].pop(0)
 
-    def choose_action_boltzmann(self, timestep):
+    def choose_action_boltzmann(self):
         """Boltzmann distribution-based action selection."""
         utility_values = {'A': 0, 'B': 0}
         for action in self.actions:
@@ -128,3 +128,13 @@ class Agent:
 
         self.last_action = np.random.choice(self.actions, p=probabilities)
         return np.random.choice(self.actions, p=probabilities)
+
+    def choose_action_epsilon_greedy(self):
+        """
+        Choose an action using epsilon-greedy strategy with utility function.
+        """
+        if np.random.rand() < self.epsilon:
+            return np.random.choice(self.actions)  # Explore: Choose a random action
+        else:
+            utilities = {action: self.compute_utility(action) for action in self.actions}
+            return max(utilities, key=utilities.get)  # Exploit: Choose the best action

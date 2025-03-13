@@ -28,4 +28,4 @@ class ResetManager:
         """Reset the simulation to run it again with the same agents."""
         self.scores_history = [{'A': [], 'B': []} for _ in range(self.num_agents)]
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
-        self.agents = [Agent(i, self.alpha, self.gamma, self.epsilon, self.temperature) for i in range(self.num_agents)]
+        self.agents = [Agent(i) for i in range(self.num_agents)]

@@ -16,7 +16,7 @@ class Simulation:
     A simulation environment for agents interacting in a network topology.
     """
 
-    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2, circle_degree=[1]):
+    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2, circle_degree=[1,2,3], trendsetter_id = 17):
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
         self.num_agents = num_agents
@@ -29,6 +29,7 @@ class Simulation:
         self.k = k
         self.p = p
         self.circle_degree=circle_degree
+        self.trendsetter_id=trendsetter_id
 
     def run_simulation(self):
         """
@@ -49,8 +50,10 @@ class Simulation:
                 agent1 = self.agents[agent1_id]
                 agent2 = self.agents[agent2_id]
 
-                action1 = agent1.choose_action_boltzmann(self)
-                action2 = agent2.choose_action_boltzmann(self)
+                #self.add_trendsetter(agent1, agent1_id, agent2, agent2_id)
+
+                action1 = agent1.choose_action_boltzmann()
+                action2 = agent2.choose_action_boltzmann()
 
                 # Update action counts
                 if action1 == 'A' and action2 == 'A':
@@ -73,6 +76,13 @@ class Simulation:
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
         print(f"sum of action count", count_AA+count_BB+count_AB+count_BA)
+
+    def add_trendsetter(self, agent1, agent1_id, agent2, agent2_id):
+        if agent1_id == self.trendsetter_id:
+            agent1.q_values = {'A': 0.4, 'B': 0.96}
+
+        elif agent2_id == self.trendsetter_id:
+            agent2.q_values = {'A': 0.4, 'B': 0.96}
 
     def _update_action_counts(self, count_AA, count_BB, count_AB, count_BA):
         """
@@ -112,4 +122,3 @@ class Simulation:
             PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p)
         elif self.topology_type == "toroidal":
             PlotManager.plot_agent_actions_graph_toroidal(self.agents, 8, 5)
-
