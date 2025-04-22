@@ -1,52 +1,50 @@
 from simulation.simulation import Simulation
 import pandas as pd
+import numpy as np
 import os
 
-def run_custom_simulations(weight_sets, num_trials=10, num_agents=60, num_steps=1500):
-    """Run simulations for predefined weight sets, each repeated multiple times."""
+def run_simulations_varying_beta(weight, beta_values, epsilon=0.15, num_trials=5, num_agents=100, num_steps=1500):
     results = []
-    for weights in weight_sets:
+    for beta in beta_values:
         for trial in range(num_trials):
             simulation = Simulation(
                 num_agents=num_agents,
                 num_steps=num_steps,
                 topology_type="toroidal",
                 k=4,
-                p=0.2
+                p=0.2,
+                beta=beta,
+                trendsetter_percent=10
             )
-            for agent in simulation.agents:
-                agent.weights = weights
 
-            # Run the simulation
+            for agent in simulation.agents:
+                agent.weights = weight
+                agent.epsilon = epsilon
+
             simulation.run_simulation()
 
-            # Collect last actions and calculate percentages
             last_actions = [agent.last_action for agent in simulation.agents]
             percent_A = (last_actions.count('A') / num_agents) * 100
             percent_B = (last_actions.count('B') / num_agents) * 100
 
-            # Store result
             results.append({
-                'Q Weight': weights[0],
-                'E Weight': weights[1],
-                'O Weight': weights[2],
+                'Agent_size': num_agents,
+                'Weight': weight,
+                'Epsilon': epsilon,
+                'Beta': beta,
                 'Trial': trial + 1,
                 'Percent of A': percent_A,
                 'Percent of B': percent_B
             })
     return results
 
-def save_results_to_excel(results, filename="outputs/custom_weight_simulation_results.xlsx"):
-    """Save the simulation results to an Excel file in the outputs directory."""
+def save_results_to_excel(results, filename="outputs/beta_variation_simulation_results.xlsx"):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     df = pd.DataFrame(results)
     df.to_excel(filename, index=False)
 
 if __name__ == '__main__':
-    weight_sets = [
-        [0, 0, 1],
-        [0, 1, 0],
-        [1, 0, 0]
-    ]
-    results = run_custom_simulations(weight_sets)
+    beta_values = np.round(np.arange(0.2, 0.8, 0.1), 2)  # [0.2, 0.3, ..., 0.7]
+    fixed_weight = [0, 0, 1]
+    results = run_simulations_varying_beta(fixed_weight, beta_values)
     save_results_to_excel(results)

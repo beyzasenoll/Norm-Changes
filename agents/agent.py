@@ -8,7 +8,7 @@ class Agent:
         agent_id,
         alpha=0.05,
         gamma=0.95,
-        epsilon=0.2,
+        epsilon=0.9,
         temperature=0.1,
         weights=[0.5, 0.3, 0.2],
         num_agents=40,

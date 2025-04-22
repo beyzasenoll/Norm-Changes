@@ -19,7 +19,7 @@ class Simulation:
     A simulation environment for agents interacting in a network topology.
     """
 
-    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.3, k=4, p=0.2,
+    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2,
                  circle_degree=[1, 2, 3], trendsetter_percent=10):
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
@@ -39,12 +39,14 @@ class Simulation:
 
         self.trendsetter_ids = self._select_trendsetters()
         self._apply_trendsetter_q_values()
+
     def run_simulation(self):
         """
         Run the simulation for the specified number of timesteps.
+        Trendsetter agents choose action 'B' only in step 0.
         """
         for step in range(self.num_steps):
-            if step % 500 == 0:
+            if step % 1500 == 0:
                 logger.info(f"Step {step}: Running simulation step.")
 
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
@@ -58,8 +60,13 @@ class Simulation:
                 agent1 = self.agents[agent1_id]
                 agent2 = self.agents[agent2_id]
 
-                action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_boltzmann()
-                action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_boltzmann()
+                # Trendsetters only act in step 0
+                if step == 0:
+                    action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_epsilon_greedy()
+                    action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_epsilon_greedy()
+                else:
+                    action1 = agent1.choose_action_boltzmann()
+                    action2 = agent2.choose_action_boltzmann()
 
                 # Update action counts
                 if action1 == 'A' and action2 == 'A':
@@ -77,12 +84,13 @@ class Simulation:
                 agent2.update_q_value(action2, reward2)
                 agent2.update_past_actions(action2)
 
-
                 self._update_scores_history(agent1, agent2)
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
+
         print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
         print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
+
     def _select_trendsetters(self):
         num_trendsetters = max(1, int(self.num_agents * self.trendsetter_percent / 100))
 
