@@ -71,11 +71,9 @@ if __name__ == '__main__':
     results = parameter_grid_search(epsilons, trendsetters, betas, weights)
 
     # Excel'e yaz
-    output_dir = "outputs"
+    output_dir = "../../outputs/outputs"
     os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, "grid_search_b_emergence.xlsx")
     df = pd.DataFrame(results)
     df.to_excel(output_path, index=False)
     print(f"\n📁 Excel oluşturuldu: {output_path}")
-
-    # En iyi sonucu

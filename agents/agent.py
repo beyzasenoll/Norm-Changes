@@ -8,14 +8,17 @@ class Agent:
         agent_id,
         alpha=0.05,
         gamma=0.95,
-        epsilon=0.9,
+        epsilon=0.15,
         temperature=0.1,
-        weights=[0.5, 0.3, 0.2],
+        weights=None,
         num_agents=40,
         observation_beta=0.5,
         window_size=5,
         network_graph=None,
+        simulation=None
     ):
+        if weights is None:
+            weights = [0, 0, 1]
         self.weights = weights
         self.agent_id = agent_id
         self.actions = ['A', 'B']
@@ -34,6 +37,7 @@ class Agent:
 
         self.network_graph = network_graph
         self.observation_beta = observation_beta
+        self.simulation = simulation
 
     def choose_max_utility_action(self):
         """Choose the action with the maximum utility."""
@@ -78,7 +82,8 @@ class Agent:
             action_frequencies.append(action_ratio)
         return np.mean(action_frequencies) if action_frequencies else 0
 
-    def get_observable_neighbors(self):
+    '''
+        def get_observable_neighbors(self):
         """Get observable neighbors based on the agent's position and observation beta."""
         row, col = divmod(self.agent_id, self.grid_width)
         topology = Topology(self.num_agents)
@@ -86,6 +91,14 @@ class Agent:
             row, col, self.grid_height, self.grid_width, self.observation_beta
         )
         return [Agent(r * self.grid_width + c) for r, c in neighbors]
+    '''
+
+    def get_observable_neighbors(self):
+        "Get observable neighbors based on the agent's position and observation beta."""
+        row, col = divmod(self.agent_id, self.grid_width)
+        topology = self.simulation.topology
+        neighbors = topology.calculate_beta_distance(row, col, self.grid_height, self.grid_width, self.observation_beta)
+        return [self.simulation.agents[r * self.grid_width + c] for r, c in neighbors]
 
     def compute_experience(self, action):
         """Compute the proportion of times the agent chose a given action in the past window."""
