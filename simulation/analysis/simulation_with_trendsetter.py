@@ -25,9 +25,20 @@ def run_simulations_varying_trendsetter(
 
             simulation.run_simulation()
 
-            last_actions = [agent.last_action for agent in simulation.agents]
-            percent_A = (last_actions.count('A') / num_agents) * 100
-            percent_B = (last_actions.count('B') / num_agents) * 100
+            count_A, count_B = 0
+            for agent in simulation.agents:
+                actionCountA, actionCountB = 0, 0
+                for action in agent.past_window['actions']:
+                    if action == 'A':
+                        actionCountA += 1
+                    elif action == 'B':
+                        actionCountB += 1
+                if actionCountA > actionCountB:
+                    count_A += 1
+                elif actionCountB > actionCountA:
+                    count_A += 1
+            percent_A = (count_A / num_agents) * 100
+            percent_B = (count_B / num_agents) * 100
 
             results.append({
                 'Trendsetter Percent': percent,

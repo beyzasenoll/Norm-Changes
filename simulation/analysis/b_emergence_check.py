@@ -24,8 +24,18 @@ def run_multiple_simulations(params):
 
     simulation.run_simulation()
 
-    count_A = sum(1 for agent in simulation.agents if agent.last_action == 'A')
-    count_B = sum(1 for agent in simulation.agents if agent.last_action == 'B')
+    count_A, count_B = 0
+    for agent in simulation.agents:
+        actionCountA, actionCountB = 0, 0
+        for action in agent.past_window['actions']:
+            if action == 'A':
+                actionCountA += 1
+            elif action == 'B':
+                actionCountB += 1
+        if actionCountA > actionCountB:
+            count_A += 1
+        elif actionCountB > actionCountA:
+            count_B += 1
 
     percentage_A = (count_A / simulation.num_agents) * 100
     percentage_B = (count_B / simulation.num_agents) * 100

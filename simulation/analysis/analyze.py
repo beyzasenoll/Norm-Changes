@@ -42,9 +42,20 @@ def parameter_grid_search(
 
             simulation.run_simulation()
 
-            last_actions = [agent.last_action for agent in simulation.agents]
-            percent_A = (last_actions.count('A') / agent_sizes) * 100
-            percent_B = (last_actions.count('B') / agent_sizes) * 100
+            count_A, count_B = 0
+            for agent in simulation.agents:
+                actionCountA, actionCountB = 0, 0
+                for action in agent.past_window['actions']:
+                    if action == 'A':
+                        actionCountA += 1
+                    elif action == 'B':
+                        actionCountB += 1
+                if actionCountA > actionCountB:
+                    count_A += 1
+                elif actionCountB > actionCountA:
+                    count_B += 1
+            percent_A = (count_A / agent_sizes) * 100
+            percent_B = (count_B / agent_sizes) * 100
 
             result = {
                 'Agent Number': agent_sizes,

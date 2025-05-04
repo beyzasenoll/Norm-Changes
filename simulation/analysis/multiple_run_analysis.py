@@ -17,13 +17,17 @@ class SimulationMultipleRunAnalysis:
             print(f"Running Simulation {sim + 1}/{num_simulations}")
             self.simulation.run_simulation()
 
-            count_A = 0
-            count_B = 0
-
+            count_A, count_B = 0
             for agent in self.simulation.agents:
-                if agent.last_action == 'A':
+                actionCountA, actionCountB = 0, 0
+                for action in agent.past_window['actions']:
+                    if action == 'A':
+                        actionCountA += 1
+                    elif action == 'B':
+                        actionCountB += 1
+                if actionCountA > actionCountB:
                     count_A += 1
-                elif agent.last_action == 'B':
+                elif actionCountB > actionCountA:
                     count_B += 1
 
             percentage_A = (count_A / self.simulation.num_agents) * 100

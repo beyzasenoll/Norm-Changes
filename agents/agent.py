@@ -13,7 +13,7 @@ class Agent:
         weights=None,
         num_agents=40,
         observation_beta=0.5,
-        window_size=5,
+        window_size=10,
         network_graph=None,
         simulation=None
     ):
