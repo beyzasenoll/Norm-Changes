@@ -69,8 +69,8 @@ class Simulation:
                     action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_epsilon_greedy()
                     action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_epsilon_greedy()
                 else:
-                    action1 = agent1.choose_action_boltzmann()
-                    action2 = agent2.choose_action_boltzmann()
+                    action1 = agent1.choose_action_epsilon_greedy()
+                    action2 = agent2.choose_action_epsilon_greedy()
 
                 # Update action counts
                 if action1 == 'A' and action2 == 'A':
