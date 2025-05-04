@@ -82,16 +82,6 @@ class Agent:
             action_frequencies.append(action_ratio)
         return np.mean(action_frequencies) if action_frequencies else 0
 
-    '''
-        def get_observable_neighbors(self):
-        """Get observable neighbors based on the agent's position and observation beta."""
-        row, col = divmod(self.agent_id, self.grid_width)
-        topology = Topology(self.num_agents)
-        neighbors = topology.calculate_beta_distance(
-            row, col, self.grid_height, self.grid_width, self.observation_beta
-        )
-        return [Agent(r * self.grid_width + c) for r, c in neighbors]
-    '''
 
     def get_observable_neighbors(self):
         "Get observable neighbors based on the agent's position and observation beta."""

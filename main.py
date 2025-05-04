@@ -2,7 +2,7 @@ from simulation.analysis.multiple_run_analysis import SimulationMultipleRunAnaly
 from simulation.simulation import Simulation
 
 if __name__ == '__main__':
-    num_agents = 100
+    num_agents = 64
     num_steps = 1500
     num_simulations = 50
 
@@ -12,9 +12,9 @@ if __name__ == '__main__':
         topology_type="toroidal",
         k=4,
         p=0.2,
-        beta=0.5,
+        beta=0.3,
         circle_degree=[1, 2, 3],
-        trendsetter_percent=10,
+        trendsetter_percent=6,
         epsilon=0.2,
         weights=[0, 0, 1]
     )

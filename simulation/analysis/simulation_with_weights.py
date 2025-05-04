@@ -42,14 +42,15 @@ def run_custom_simulations(weight_sets, num_trials=10, num_agents=100, num_steps
             })
     return results
 
-def save_results_to_excel(results, filename="/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/custom_weight_simulation_results.xlsx"):
+
+
+def save_results_to_csv(results, filename="/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/custom_weight_simulation_results.csv"):
     """
-    Save the simulation results to an Excel file in the outputs directory.
+    Save the simulation results to a CSV file in the outputs directory.
     """
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     df = pd.DataFrame(results)
-    df.to_excel(filename, index=False)
-    print(f"Results saved to {filename}")
+    df.to_csv(filename, index=False)
 
 if __name__ == '__main__':
     weight_sets = [
@@ -58,4 +59,4 @@ if __name__ == '__main__':
         [1, 0, 0],
     ]
     results = run_custom_simulations(weight_sets, num_trials=10)
-    save_results_to_excel(results)
+    save_results_to_csv(results)

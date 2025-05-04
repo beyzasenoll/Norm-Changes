@@ -5,7 +5,6 @@ from simulation.simulation import Simulation
 def run_simulation_with_params(params):
     sim = Simulation(
         num_agents=params['num_agents'],
-        
         num_steps=1500,
         topology_type=params['topology_type'],
         beta=params['beta'],

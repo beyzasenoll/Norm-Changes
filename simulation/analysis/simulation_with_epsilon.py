@@ -13,7 +13,7 @@ def run_simulations_varying_epsilon(weight, epsilon_values, num_trials=5, num_ag
                 topology_type="toroidal",
                 k=4,
                 p=0.2,
-                beta=0.3,
+                beta=0.5,
                 trendsetter_percent=10
             )
 
@@ -38,13 +38,17 @@ def run_simulations_varying_epsilon(weight, epsilon_values, num_trials=5, num_ag
             })
     return results
 
-def save_results_to_excel(results, filename="outputs/epsilon_variation_simulation_results.xlsx"):
+def save_results_to_csv(results, filename):
+    """
+    Save the simulation results to a CSV file in the outputs directory.
+    """
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     df = pd.DataFrame(results)
-    df.to_excel(filename, index=False)
+    df.to_csv(filename, index=False)
 
 if __name__ == '__main__':
+    outputs_dir = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/custom_epsilon_simulation_results.csv"
     epsilon_values = np.round(np.arange(0, 0.55, 0.05), 2)
     fixed_weight = [0, 0, 1]
     results = run_simulations_varying_epsilon(fixed_weight, epsilon_values)
-    save_results_to_excel(results)
+    save_results_to_csv(results,outputs_dir)
