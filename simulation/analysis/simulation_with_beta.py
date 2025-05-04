@@ -24,7 +24,7 @@ def run_simulations_varying_beta(weight, beta_values, epsilon=0.15, num_trials=5
 
             simulation.run_simulation()
 
-            count_A, count_B = 0
+            count_A, count_B = 0,0
             for agent in simulation.agents:
                 actionCountA, actionCountB = 0, 0
                 for action in agent.past_window['actions']:

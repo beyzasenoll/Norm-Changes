@@ -42,7 +42,7 @@ def parameter_grid_search(
 
             simulation.run_simulation()
 
-            count_A, count_B = 0
+            count_A, count_B = 0,0
             for agent in simulation.agents:
                 actionCountA, actionCountB = 0, 0
                 for action in agent.past_window['actions']:

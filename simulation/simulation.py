@@ -50,8 +50,8 @@ class Simulation:
         Trendsetter agents choose action 'B' only in step 0.
         """
         for step in range(self.num_steps):
-            if step % 1500 == 0:
-                logger.info(f"Step {step}: Running simulation step.")
+#            if step % 1500 == 0:
+#                logger.info(f"Step {step}: Running simulation step.")
 
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
             self.pairs = self.topology.form_pairs(self.circle_degree)

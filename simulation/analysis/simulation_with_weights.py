@@ -28,7 +28,7 @@ def run_custom_simulations(weight_sets, num_trials=10, num_agents=100, num_steps
 
             simulation.run_simulation()
 
-            count_A, count_B = 0
+            count_A, count_B = 0,0
             for agent in simulation.agents:
                 actionCountA, actionCountB = 0, 0
                 for action in agent.past_window['actions']:

@@ -72,8 +72,25 @@ class PlotManager:
         topology_graph = nx.watts_strogatz_graph(num_agents, k=k, p=p)
         pos = nx.spring_layout(topology_graph)
 
-        colors = ['blue' if agent.last_action == 'A' else 'orange' for agent in agents]
-        labels = {agent.agent_id: str(agent.agent_id) for agent in agents}
+        count_A, count_B = 0, 0
+        for agent in agents:
+            actionCountA, actionCountB = 0, 0
+            for action in agent.past_window['actions']:
+                if action == 'A':
+                    actionCountA += 1
+                elif action == 'B':
+                    actionCountB += 1
+            if actionCountA > actionCountB:
+                count_A += 1
+            elif actionCountB > actionCountA:
+                count_B += 1
+            if count_A > count_B :
+                choosed_action = 'A'
+            elif count_B > count_A :
+                choosed_action = 'B'
+
+            colors = ['blue' if choosed_action== 'A' else 'orange' ]
+            labels = {agent.agent_id: str(agent.agent_id)}
 
         plt.figure(figsize=(10, 6))
         nx.draw(topology_graph, pos, node_color=colors, with_labels=True, labels=labels,
@@ -106,8 +123,25 @@ class PlotManager:
         pos = {node: (node[1], -node[0]) for node in G.nodes()}
         colors, labels = [], {}
 
+        count_A, count_B = 0, 0
+
         for agent, node in zip(agents, all_nodes):
-            color = 'blue' if agent.last_action == 'A' else 'orange'
+            actionCountA, actionCountB = 0, 0
+            for action in agent.past_window['actions']:
+                if action == 'A':
+                    actionCountA += 1
+                elif action == 'B':
+                    actionCountB += 1
+            if actionCountA > actionCountB:
+                count_A += 1
+            elif actionCountB > actionCountA:
+                count_B += 1
+            if count_A > count_B :
+                choosed_action = 'A'
+            elif count_B > count_A :
+                choosed_action = 'B'
+
+            color = 'blue' if choosed_action == 'A' else 'orange'
             colors.append(color)
             labels[node] = str(agent.agent_id)
 
