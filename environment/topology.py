@@ -168,7 +168,7 @@ class Topology:
                 pairs.append((agent_id, chosen_neighbor))
                 used_agents.add(agent_id)
             else:
-                print(f"⚠️ Agent {agent_id} has no valid neighbors!")
+                print(f"️ Agent {agent_id} has no valid neighbors!")
 
         return pairs
 

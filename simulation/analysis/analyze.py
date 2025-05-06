@@ -1,7 +1,7 @@
 from itertools import product
 import pandas as pd
 import os
-from simulation.simulation import Simulation  # Kendi Simulation sınıfını burada kullan
+from simulation.simulation import Simulation
 
 def save_single_result_to_csv(result, filename):
     """
@@ -26,7 +26,6 @@ def parameter_grid_search(
     combinations = list(product(agent_sizes,epsilons, trendsetters, betas, weights))
 
     for agent_sizes ,epsilon, trendsetter_percent, beta, weight in combinations:
-        print(f"Running for Epsilon={epsilon}, Trendsetter%={trendsetter_percent}, Beta={beta}, Weights={weight}")
         for trial in range(num_trials):
             simulation = Simulation(
                 num_agents=agent_sizes,
@@ -36,8 +35,8 @@ def parameter_grid_search(
                 p=p,
                 beta=beta,
                 trendsetter_percent=trendsetter_percent,
-                weights=weight,   # weights doğrudan veriyoruz
-                epsilon=epsilon   # epsilon doğrudan veriyoruz
+                weights=weight,
+                epsilon=epsilon
             )
 
             simulation.run_simulation()
@@ -67,8 +66,6 @@ def parameter_grid_search(
                 'Percent of A': percent_A,
                 'Percent of B': percent_B
             }
-
-            # Her sonucu anında CSV'ye ekle
             save_single_result_to_csv(result, output_filename)
 
 def analyze_results(filename):
@@ -76,7 +73,7 @@ def analyze_results(filename):
     grouped = df.groupby(['Epsilon', 'Trendsetter %', 'Beta', 'Weight'])['Percent of B'].mean().reset_index()
     best = grouped.loc[grouped['Percent of B'].idxmax()]
 
-    print("\n🔍 En iyi parametre kombinasyonu:")
+    print("\n En iyi parametre kombinasyonu:")
     print(f" - Epsilon: {best['Epsilon']}")
     print(f" - Trendsetter %: {best['Trendsetter %']}")
     print(f" - Beta: {best['Beta']}")
@@ -85,16 +82,15 @@ def analyze_results(filename):
 
 if __name__ == '__main__':
     agent_sizes = [100]
-    epsilons = [0.15,0.2]
+    epsilons = [0.1,0.15,0.2]
     trendsetters = [2, 4, 6, 8, 10]
-    betas = [0.1, 0.2, 0.3, 0.4, 0.5]
+    betas = [0.3, 0.4, 0.5]
     weights = [
         [1, 0, 0],
         [0, 1, 0],
         [0, 0, 1],
     ]
-
-    output_file = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/grid_search_b_emergence.csv"
+    output_file = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/grid_search_b_emergence_new.csv"
 
     parameter_grid_search(
         agent_sizes,epsilons, trendsetters, betas, weights,
@@ -103,6 +99,6 @@ if __name__ == '__main__':
         output_filename=output_file
     )
 
-    print(f"\n📁 CSV dosyası oluşturuldu: {output_file}")
+    print(f"\n CSV dosyası oluşturuldu: {output_file}")
 
     analyze_results(output_file)

@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 from simulation.reset_manager import ResetManager
 from simulation.simulation import Simulation
@@ -79,7 +78,7 @@ if __name__ == '__main__':
             print(f"Error with params {params}: {e}")
 
     output_df = pd.DataFrame(results)
-    output_df.to_excel(output_path, index=False)
+    output_df.to_csv(output_path, index=False)
 
 
 

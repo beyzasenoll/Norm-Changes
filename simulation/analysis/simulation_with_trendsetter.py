@@ -1,13 +1,8 @@
 from simulation.simulation import Simulation
 import pandas as pd
-import numpy as np
 import os
 
-def run_simulations_varying_trendsetter(
-    weight, trendsetter_percents,
-    beta=0.4, epsilon=0.15,
-    num_trials=5, num_agents=100, num_steps=1500
-):
+def run_simulations_varying_trendsetter(weight, trendsetter_percents, beta=0.4, epsilon=0.15, num_trials=5, num_agents=100, num_steps=1500):
     results = []
     for percent in trendsetter_percents:
         for trial in range(num_trials):
@@ -22,42 +17,43 @@ def run_simulations_varying_trendsetter(
                 weights=weight,
                 epsilon=epsilon
             )
-
             simulation.run_simulation()
-
-            count_A, count_B = 0,0
-            for agent in simulation.agents:
-                actionCountA, actionCountB = 0, 0
-                for action in agent.past_window['actions']:
-                    if action == 'A':
-                        actionCountA += 1
-                    elif action == 'B':
-                        actionCountB += 1
-                if actionCountA > actionCountB:
-                    count_A += 1
-                elif actionCountB > actionCountA:
-                    count_A += 1
-            percent_A = (count_A / num_agents) * 100
-            percent_B = (count_B / num_agents) * 100
-
+            count_A, count_B = count_agent_actions(simulation, num_agents)
             results.append({
-                'Trendsetter Percent': percent,
+                'Trendsetter_Percent': percent,
                 'Trial': trial + 1,
                 'Beta': beta,
                 'Epsilon': epsilon,
-                'Percent of A': percent_A,
-                'Percent of B': percent_B
+                'Percent_A': count_A,
+                'Percent_B': count_B
             })
     return results
 
-def save_results_to_csv(results, filename="outputs/trendsetter_variation_simulation_results.csv"):
+def count_agent_actions(simulation, num_agents):
+    count_A, count_B = 0, 0
+    for agent in simulation.agents:
+        action_A, action_B = 0, 0
+        for action in agent.past_window['actions']:
+            if action == 'A':
+                action_A += 1
+            elif action == 'B':
+                action_B += 1
+        if action_A > action_B:
+            count_A += 1
+        elif action_B > action_A:
+            count_B += 1
+    percent_A = (count_A / num_agents) * 100
+    percent_B = (count_B / num_agents) * 100
+    return percent_A, percent_B
+
+def save_results_to_csv(results, filename):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
-    df = pd.DataFrame(results)
-    df.to_csv(filename, index=False)
+    pd.DataFrame(results).to_csv(filename, index=False)
     print(f"Results saved to {filename}")
 
 if __name__ == '__main__':
-    trendsetter_percents = [2,4,6,8,10]
+    output_file = "outputs/trendsetter_variation_results.csv"
+    trendsetter_percents = [2, 4, 6, 8, 10]
     fixed_weight = [0, 0, 1]
     results = run_simulations_varying_trendsetter(fixed_weight, trendsetter_percents)
-    save_results_to_csv(results)
+    save_results_to_csv(results, output_file)

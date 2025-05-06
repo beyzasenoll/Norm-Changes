@@ -17,6 +17,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/outputs/percentage_b_emergence_results_new.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/try_100_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
       </map>
     </option>
   </component>

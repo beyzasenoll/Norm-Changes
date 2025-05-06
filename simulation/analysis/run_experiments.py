@@ -1,73 +1,107 @@
-
+import os
+import csv
 import pandas as pd
+from simulation.reset_manager import ResetManager
 from simulation.simulation import Simulation
 
-def run_simulation_with_params(params):
-    sim = Simulation(
-        num_agents=params['num_agents'],
-        num_steps=1500,
-        topology_type=params['topology_type'],
-        beta=params['beta'],
-        k=4,
-        p=0.2,
-        circle_degree=[1, 2],
-        trendsetter_percent=params['trendsetter_percent']
-    )
+def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent, weight, epsilon,
+                             num_simulations=10, topology_type="toroidal"):
+    aa_wins, bb_wins = 0, 0
 
-    for agent in sim.agents:
-        agent.epsilon = params['epsilon']
-        agent.weights = [
-            params['weight_q'],
-            params['weight_exp'],
-            params['weight_obs']
-        ]
-        agent.observation_beta = params['beta']
+    for sim in range(num_simulations):
+        print(f"Running Simulation {sim + 1}/{num_simulations}")
+        simulation = Simulation(
+            num_agents=agent_sizes,
+            num_steps=num_steps,
+            topology_type=topology_type,
+            k=k,
+            p=p,
+            beta=beta,
+            trendsetter_percent=trendsetter_percent,
+            weights=weight,
+            epsilon=epsilon
+        )
 
-    sim.run_simulation()
+        simulation.run_simulation()
+        count_A, count_B = count_agent_actions(simulation)
 
-    count_A, count_B = 0, 0
-    for agent in sim.agents:
-        actionCountA, actionCountB = 0, 0
-        for action in agent.past_window['actions']:
-            if action == 'A':
-                actionCountA += 1
-            elif action == 'B':
-                actionCountB += 1
-        if actionCountA > actionCountB:
-            count_A += 1
-        elif actionCountB > actionCountA:
-            count_B += 1
+        percentage_A = count_A / simulation.num_agents * 100
+        percentage_B = count_B / simulation.num_agents * 100
 
-    total_actions = count_A + count_B
-    percent_A = 100 * count_A / total_actions
-    percent_B = 100 * count_B / total_actions
+        if percentage_A >= 90:
+            aa_wins += 1
+        elif percentage_B >= 90:
+            bb_wins += 1
 
-    emerged = "Yes" if percent_A >= 90 or percent_B >= 90 else "No"
+        ResetManager.reset_simulation(simulation)
 
+    b_emerged_percentage = bb_wins / num_simulations
+    print(f"B norm emerged in {bb_wins}/{num_simulations} simulations")
 
     return {
-        "A": count_A,
-        "B": count_B,
-        "percent_A": percent_A,
-        "percent_B": percent_B,
-        "emerged": emerged
+        "A_emerged_count": aa_wins,
+        "B_emerged_count": bb_wins,
+        "Total_emerged": aa_wins + bb_wins,
+        "B_emerged_percentage": b_emerged_percentage
     }
 
-if __name__ == "__main__":
-    input_path = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/inputs/experiment_parameters_sample_500.xlsx"
-    output_path = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/experiment_results1.xlsx"
+def count_agent_actions(simulation):
+    count_A, count_B = 0, 0
+    for agent in simulation.agents:
+        action_A, action_B = 0, 0
+        for action in agent.past_window['actions']:
+            if action == 'A':
+                action_A += 1
+            elif action == 'B':
+                action_B += 1
+        if action_A > action_B:
+            count_A += 1
+        elif action_B > action_A:
+            count_B += 1
+    return count_A, count_B
 
-    input_df = pd.read_excel(input_path)
-    results = []
+if __name__ == '__main__':
+    df = pd.read_excel("inputs/percentage_b_emerged_100.xlsx")
+    df["Weight"] = df["Weight"].astype(str)
+    output_file = "outputs/percentage_b_emergence_results.csv"
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-    for _, row in input_df.iterrows():
-        params = row.to_dict()
-        try:
-            result = run_simulation_with_params(params)
-            combined = {**params, **result}
-            results.append(combined)
-        except Exception as e:
-            print(f"Error with params {params}: {e}")
+    with open(output_file, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "A_emerged_count", "B_emerged_count", "Total_emerged", "B_emerged_percentage",
+            "Agent_Number", "Epsilon", "Trendsetter_Percent", "Beta", "Weight"
+        ])
 
-    output_df = pd.DataFrame(results)
-    output_df.to_excel(output_path, index=False)
+    for _, row in df.iterrows():
+        agent_sizes = int(row["Agent Number"])
+        epsilon = float(str(row["Epsilon"]).replace(",", "."))
+        trendsetter_percent = int(row["Trendsetter %"])
+        beta = float(str(row["Beta"]).replace(",", "."))
+        weight = eval(row["Weight"])
+
+        result = run_multiple_simulations(agent_sizes, 1500, 4, 0.2, beta, trendsetter_percent, weight, epsilon)
+
+        result.update({
+            "Agent_Number": agent_sizes,
+            "Epsilon": epsilon,
+            "Trendsetter_Percent": trendsetter_percent,
+            "Beta": beta,
+            "Weight": row["Weight"]
+        })
+
+        with open(output_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow([
+                result["A_emerged_count"],
+                result["B_emerged_count"],
+                result["Total_emerged"],
+                result["B_emerged_percentage"],
+                result["Agent_Number"],
+                result["Epsilon"],
+                result["Trendsetter_Percent"],
+                result["Beta"],
+                result["Weight"]
+            ])
+
+        print(f"Saved result for Agent Number {agent_sizes} to {output_file}")

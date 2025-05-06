@@ -1,5 +1,6 @@
 import logging
-from random import random
+import random
+
 
 import networkx as nx
 import numpy as np
@@ -92,10 +93,10 @@ class Simulation:
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
 
-        print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
-        print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
+#        print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
+#        print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
 
-    def _select_trendsetters(self):
+    def _select_trendsetters_1(self):
         num_trendsetters = max(1, int(self.num_agents * self.trendsetter_percent / 100))
 
         if self.topology_type == "toroidal":
@@ -117,6 +118,20 @@ class Simulation:
 
         else:  # fallback
             return random.sample(range(self.num_agents), num_trendsetters)
+
+    def _select_trendsetters(self):
+        num_trendsetters = max(1, int(self.num_agents * self.trendsetter_percent / 100))
+        trendsetters = []
+        if self.topology_type == "toroidal":
+            agent_id = random.sample(range(self.num_agents), 1)[0]
+            for _ in range(num_trendsetters):
+                trendsetters.append(agent_id)
+                agent_id = (agent_id + 1) % self.num_agents
+
+        else:
+            return random.sample(range(self.num_agents), num_trendsetters)
+
+        return trendsetters
 
     def _apply_trendsetter_q_values(self):
         for tid in self.trendsetter_ids:
