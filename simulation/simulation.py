@@ -173,3 +173,5 @@ class Simulation:
             PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p)
         elif self.topology_type == "toroidal":
             PlotManager.plot_agent_actions_graph_toroidal(self.agents)
+        elif self.topology_type == "scale_free":
+            PlotManager.plot_agent_actions_graph_scale_free(self.agents , self.k)
