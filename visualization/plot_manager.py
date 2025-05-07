@@ -72,30 +72,31 @@ class PlotManager:
         topology_graph = nx.watts_strogatz_graph(num_agents, k=k, p=p)
         pos = nx.spring_layout(topology_graph)
 
-        count_A, count_B = 0, 0
-        for agent in agents:
-            actionCountA, actionCountB = 0, 0
-            for action in agent.past_window['actions']:
-                if action == 'A':
-                    actionCountA += 1
-                elif action == 'B':
-                    actionCountB += 1
-            if actionCountA > actionCountB:
-                count_A += 1
-            elif actionCountB > actionCountA:
-                count_B += 1
-            if count_A > count_B :
-                choosed_action = 'A'
-            elif count_B > count_A :
-                choosed_action = 'B'
+        colors = []
+        labels = {}
 
-            colors = ['blue' if choosed_action== 'A' else 'orange' ]
-            labels = {agent.agent_id: str(agent.agent_id)}
+        for agent in agents:
+            actions = agent.past_window['actions']
+            actionCountA = actions.count('A')
+            actionCountB = actions.count('B')
+
+            if actionCountA > actionCountB:
+                choosed_action = 'A'
+                color = 'blue'
+            elif actionCountB > actionCountA:
+                choosed_action = 'B'
+                color = 'orange'
+            else:
+                choosed_action = 'Equal'
+                color = 'gray'
+
+            colors.append(color)
+            labels[agent.agent_id] = str(agent.agent_id)
 
         plt.figure(figsize=(10, 6))
         nx.draw(topology_graph, pos, node_color=colors, with_labels=True, labels=labels,
                 node_size=500, font_size=10, font_color='white', font_weight='bold', edge_color='gray')
-        plt.title(f'Final Actions of Agents (Blue: A, Orange: B) in Small-World Topology (k={k}, p={p})')
+        plt.title(f'Final Actions of Agents in Small-World Topology (Blue: A, Orange: B, Gray: Tie) (k={k}, p={p})')
         plt.show()
 
     @staticmethod
@@ -115,42 +116,37 @@ class PlotManager:
             grid_height = grid_size
             grid_width = grid_size
 
-
         G = nx.grid_2d_graph(grid_height, grid_width)
         all_nodes = list(G.nodes())[:num_agents]
         G = G.subgraph(all_nodes)
 
         pos = {node: (node[1], -node[0]) for node in G.nodes()}
-        colors, labels = [], {}
-
-        count_A, count_B = 0, 0
+        colors = []
+        labels = {}
 
         for agent, node in zip(agents, all_nodes):
-            actionCountA, actionCountB = 0, 0
-            for action in agent.past_window['actions']:
-                if action == 'A':
-                    actionCountA += 1
-                elif action == 'B':
-                    actionCountB += 1
-            if actionCountA > actionCountB:
-                count_A += 1
-            elif actionCountB > actionCountA:
-                count_B += 1
-            if count_A > count_B :
-                choosed_action = 'A'
-            elif count_B > count_A :
-                choosed_action = 'B'
+            actions = agent.past_window['actions']
+            actionCountA = actions.count('A')
+            actionCountB = actions.count('B')
 
-            color = 'blue' if choosed_action == 'A' else 'orange'
+            if actionCountA > actionCountB:
+                choosed_action = 'A'
+                color = 'blue'
+            elif actionCountB > actionCountA:
+                choosed_action = 'B'
+                color = 'orange'
+            else:
+                choosed_action = 'Equal'
+                color = 'gray'
+
             colors.append(color)
             labels[node] = str(agent.agent_id)
 
         plt.figure(figsize=(8, 6))
-        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels, node_size=500, font_size=10,
-                font_color='white', font_weight='bold')
-        plt.title(f'Final Actions of Agents (Blue: A, Orange: B) in Toroidal Topology')
+        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels, node_size=500,
+                font_size=10, font_color='white', font_weight='bold')
+        plt.title(f'Final Actions of Agents (Blue: A, Orange: B, Gray: Tie) in Toroidal Topology')
         plt.show()
-
     @staticmethod
     def plot_aa_vs_bb_results(aa_wins, bb_wins):
         """Plot the result of AA vs BB wins in the final timestep across multiple simulations."""
