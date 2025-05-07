@@ -65,13 +65,9 @@ class Simulation:
                 agent1 = self.agents[agent1_id]
                 agent2 = self.agents[agent2_id]
 
-                # Trendsetters only act in step 0
-                if step == 0:
-                    action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_epsilon_greedy()
-                    action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_epsilon_greedy()
-                else:
-                    action1 = agent1.choose_action_epsilon_greedy()
-                    action2 = agent2.choose_action_epsilon_greedy()
+
+                action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_epsilon_greedy()
+                action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_epsilon_greedy()
 
                 # Update action counts
                 if action1 == 'A' and action2 == 'A':
@@ -94,7 +90,7 @@ class Simulation:
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
 
 #        print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
-#        print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
+        print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
 
     def _select_trendsetters_1(self):
         num_trendsetters = max(1, int(self.num_agents * self.trendsetter_percent / 100))
@@ -171,7 +167,9 @@ class Simulation:
         timesteps = range(self.num_steps)
         PlotManager.plot_action_combinations(self.action_combinations, timesteps, self.topology_type)
         PlotManager.plot_q_values(self.scores_history, self.num_agents, self.num_steps, self.topology_type)
+
         if self.topology_type == "small_world":
+            print("Sc")
             PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p)
         elif self.topology_type == "toroidal":
             PlotManager.plot_agent_actions_graph_toroidal(self.agents)
