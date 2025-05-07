@@ -147,6 +147,44 @@ class PlotManager:
                 font_size=10, font_color='white', font_weight='bold')
         plt.title(f'Final Actions of Agents (Blue: A, Orange: B, Gray: Tie) in Toroidal Topology')
         plt.show()
+
+    @staticmethod
+    def plot_agent_actions_graph_scale_free(agents, k):
+        """
+        Plot a Scale-Free topology graph showing agents' final actions.
+
+        :param agents: List of agents.
+        :param num_agents: Number of agents.
+        :param k: Number of edges to attach from a new node to existing nodes (used in Barabási–Albert model).
+        """
+        num_agents = len(agents)
+        G = nx.barabasi_albert_graph(num_agents, k)
+        pos = nx.spring_layout(G, seed=42)  # For consistent layout
+
+        colors = []
+        labels = {}
+
+        for agent in agents:
+            actions = agent.past_window['actions']
+            count_A = actions.count('A')
+            count_B = actions.count('B')
+
+            if count_A > count_B:
+                color = 'blue'
+            elif count_B > count_A:
+                color = 'orange'
+            else:
+                color = 'gray'
+
+            colors.append(color)
+            labels[agent.agent_id] = str(agent.agent_id)
+
+        plt.figure(figsize=(10, 6))
+        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels,
+                node_size=500, font_size=10, font_color='white', font_weight='bold', edge_color='gray')
+        plt.title('Final Actions of Agents (Blue: A, Orange: B, Gray: Tie) in Scale-Free Topology')
+        plt.show()
+
     @staticmethod
     def plot_aa_vs_bb_results(aa_wins, bb_wins):
         """Plot the result of AA vs BB wins in the final timestep across multiple simulations."""
