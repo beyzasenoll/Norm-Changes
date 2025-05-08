@@ -169,9 +169,8 @@ class Simulation:
         PlotManager.plot_q_values(self.scores_history, self.num_agents, self.num_steps, self.topology_type)
 
         if self.topology_type == "small_world":
-            print("Sc")
-            PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p)
+            PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p,self.trendsetter_ids)
         elif self.topology_type == "toroidal":
-            PlotManager.plot_agent_actions_graph_toroidal(self.agents)
+            PlotManager.plot_agent_actions_graph_toroidal(self.agents, self.trendsetter_ids)
         elif self.topology_type == "scale_free":
-            PlotManager.plot_agent_actions_graph_scale_free(self.agents , self.k)
+            PlotManager.plot_agent_actions_graph_scale_free(self.agents , self.k, self.trendsetter_ids)

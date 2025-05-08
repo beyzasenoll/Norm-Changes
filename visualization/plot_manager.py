@@ -59,21 +59,26 @@ class PlotManager:
         plt.legend()
         plt.show()
 
+
     @staticmethod
-    def plot_agent_actions_graph_small_world(agents, num_agents, k, p):
+    def plot_agent_actions_graph_small_world(agents, num_agents, k, p, trendsetters_ids):
         """
         Plot a Small-World topology graph showing agents' final actions.
+        Trendsetters are highlighted with black borders and bold labels.
 
         :param agents: List of agents.
         :param num_agents: Number of agents.
         :param k: Number of neighbors for Small-World topology.
         :param p: Rewiring probability for Small-World topology.
+        :param trendsetters_ids: List of trendsetter agent IDs.
         """
         topology_graph = nx.watts_strogatz_graph(num_agents, k=k, p=p)
         pos = nx.spring_layout(topology_graph)
 
         colors = []
         labels = {}
+        edge_colors = {}
+        font_weights = {}
 
         for agent in agents:
             actions = agent.past_window['actions']
@@ -81,31 +86,55 @@ class PlotManager:
             actionCountB = actions.count('B')
 
             if actionCountA > actionCountB:
-                choosed_action = 'A'
                 color = 'blue'
             elif actionCountB > actionCountA:
-                choosed_action = 'B'
                 color = 'orange'
             else:
-                choosed_action = 'Equal'
                 color = 'gray'
 
             colors.append(color)
             labels[agent.agent_id] = str(agent.agent_id)
 
+            if agent.agent_id in trendsetters_ids:
+                edge_colors[agent.agent_id] = 'black'
+                font_weights[agent.agent_id] = 'bold'
+            else:
+                edge_colors[agent.agent_id] = 'gray'
+                font_weights[agent.agent_id] = 'normal'
+
         plt.figure(figsize=(10, 6))
-        nx.draw(topology_graph, pos, node_color=colors, with_labels=True, labels=labels,
-                node_size=500, font_size=10, font_color='white', font_weight='bold', edge_color='gray')
-        plt.title(f'Final Actions of Agents in Small-World Topology (Blue: A, Orange: B, Gray: Tie) (k={k}, p={p})')
+        nx.draw_networkx_edges(topology_graph, pos, edge_color='gray')
+
+        nx.draw_networkx_nodes(
+            topology_graph, pos,
+            node_color=colors,
+            node_size=500,
+            edgecolors=[edge_colors[n] for n in topology_graph.nodes()],
+            linewidths=2
+        )
+
+        for node_id in topology_graph.nodes():
+            nx.draw_networkx_labels(
+                topology_graph, pos,
+                labels={node_id: labels[node_id]},
+                font_size=10,
+                font_color='white',
+                font_weight=font_weights[node_id]
+            )
+
+        plt.title(
+            f'Final Actions of Agents in Small-World Topology (Blue: A, Orange: B, Gray: Tie)\nTrendsetters have black borders and bold labels (k={k}, p={p})')
+        plt.axis('off')
         plt.show()
 
     @staticmethod
-    def plot_agent_actions_graph_toroidal(agents, grid_height=None, grid_width=None):
+    def plot_agent_actions_graph_toroidal(agents, trendsetters_ids, grid_height=None, grid_width=None):
         """
-        Plot a graph-grid showing agents' final actions with colors and IDs.
+        Plot a graph-grid showing agents' final actions with colors, IDs, and borders for trendsetters.
         Grid size is automatically adjusted to the number of agents if not specified.
 
         :param agents: List of agents.
+        :param trendsetters_ids: List of trendsetter agent IDs.
         :param grid_height: (Optional) Grid height.
         :param grid_width: (Optional) Grid width.
         """
@@ -123,6 +152,7 @@ class PlotManager:
         pos = {node: (node[1], -node[0]) for node in G.nodes()}
         colors = []
         labels = {}
+        edge_colors = []
 
         for agent, node in zip(agents, all_nodes):
             actions = agent.past_window['actions']
@@ -130,59 +160,93 @@ class PlotManager:
             actionCountB = actions.count('B')
 
             if actionCountA > actionCountB:
-                choosed_action = 'A'
                 color = 'blue'
             elif actionCountB > actionCountA:
-                choosed_action = 'B'
                 color = 'orange'
             else:
-                choosed_action = 'Equal'
                 color = 'gray'
 
             colors.append(color)
             labels[node] = str(agent.agent_id)
 
+            if agent.agent_id in trendsetters_ids:
+                edge_colors.append('black')
+            else:
+                edge_colors.append('gray')
+
         plt.figure(figsize=(8, 6))
-        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels, node_size=500,
-                font_size=10, font_color='white', font_weight='bold')
-        plt.title(f'Final Actions of Agents (Blue: A, Orange: B, Gray: Tie) in Toroidal Topology')
+        nx.draw_networkx_edges(G, pos, edge_color='black')
+
+        nx.draw_networkx_nodes(
+            G, pos,
+            node_color=colors,
+            node_size=500,
+            edgecolors=edge_colors,
+            linewidths=2
+        )
+
+        nx.draw_networkx_labels(
+            G, pos,
+            labels=labels,
+            font_size=10,
+            font_color='white'
+        )
+
+        plt.title(
+            'Final Actions of Agents (Blue: A, Orange: B, Gray: Tie) in Toroidal Topology\nTrendsetters have black borders')
         plt.show()
 
     @staticmethod
-    def plot_agent_actions_graph_scale_free(agents, k):
+    def plot_agent_actions_graph_scale_free(agents, k, trendsetters_ids):
         """
         Plot a Scale-Free topology graph showing agents' final actions.
-
-        :param agents: List of agents.
-        :param num_agents: Number of agents.
-        :param k: Number of edges to attach from a new node to existing nodes (used in Barabási–Albert model).
+        Trendsetters will be highlighted with a border, but all nodes have same size.
         """
         num_agents = len(agents)
         G = nx.barabasi_albert_graph(num_agents, k)
-        pos = nx.spring_layout(G, seed=42)  # For consistent layout
+        pos = nx.spring_layout(G, seed=42)
 
         colors = []
         labels = {}
+        node_sizes = [500] * num_agents  # all nodes same size
+        node_edge_colors = []
 
         for agent in agents:
             actions = agent.past_window['actions']
             count_A = actions.count('A')
             count_B = actions.count('B')
 
-            if count_A > count_B:
-                color = 'blue'
-            elif count_B > count_A:
-                color = 'orange'
-            else:
-                color = 'gray'
-
+            color = 'blue' if count_A >= count_B else 'orange'
             colors.append(color)
+
             labels[agent.agent_id] = str(agent.agent_id)
 
+            # Edge color: black if trendsetter, gray otherwise
+            if agent.agent_id in trendsetters_ids:
+                node_edge_colors.append('black')
+            else:
+                node_edge_colors.append('gray')
+
         plt.figure(figsize=(10, 6))
-        nx.draw(G, pos, node_color=colors, with_labels=True, labels=labels,
-                node_size=500, font_size=10, font_color='white', font_weight='bold', edge_color='gray')
-        plt.title('Final Actions of Agents (Blue: A, Orange: B, Gray: Tie) in Scale-Free Topology')
+        nx.draw_networkx_edges(G, pos, edge_color='gray')
+
+        nx.draw_networkx_nodes(
+            G, pos,
+            node_color=colors,
+            node_size=node_sizes,
+            edgecolors=node_edge_colors,
+            linewidths=2
+        )
+
+        nx.draw_networkx_labels(
+            G, pos,
+            labels=labels,
+            font_size=10,
+            font_color='white'
+        )
+
+        plt.title('Final Actions of Agents (Blue: A, Orange: B)\nTrendsetters have black borders')
+        plt.axis('off')
         plt.show()
 
     @staticmethod
