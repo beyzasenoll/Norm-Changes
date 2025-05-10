@@ -9,7 +9,6 @@ def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_per
     aa_wins, bb_wins = 0, 0
 
     for sim in range(num_simulations):
-        print(f"Running Simulation {sim + 1}/{num_simulations}")
         simulation = Simulation(
             num_agents=agent_sizes,
             num_steps=num_steps,
@@ -37,8 +36,6 @@ def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_per
         ResetManager.reset_simulation(simulation)
 
     b_emerged_percentage = bb_wins / num_simulations
-    print(f"B norm emerged in {bb_wins}/{num_simulations} simulations")
-
     return {
         "A_emerged_count": aa_wins,
         "B_emerged_count": bb_wins,
@@ -102,7 +99,8 @@ if __name__ == '__main__':
                 result["Trendsetter_Percent"],
                 result["Beta"],
                 result["Weight"],
-               result["A_emerged_count"],
+                result["Distance_Type"],
+                result["A_emerged_count"],
                 result["B_emerged_count"],
                 result["Total_emerged"],
                 result["B_emerged_percentage"]

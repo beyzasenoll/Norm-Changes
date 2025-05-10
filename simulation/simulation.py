@@ -90,8 +90,6 @@ class Simulation:
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
 
         #        print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
-        print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
-
     def _apply_trendsetter_q_values(self):
         for tid in self.trendsetter_ids:
             self.agents[tid].q_values = {'A': 0.4, 'B': 0.96}

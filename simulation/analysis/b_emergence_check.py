@@ -46,8 +46,6 @@ def run_multiple_simulations(params):
 
     ResetManager.reset_simulation(simulation)
 
-    print(f"B norm emerged in {bb_wins} simulations")
-
     return {
         "num_agents" :params['Agent Number'],
         "num_steps" : 3000,
