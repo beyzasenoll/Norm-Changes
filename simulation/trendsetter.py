@@ -2,6 +2,8 @@ import random
 import networkx as nx
 import logging
 
+from networkx import shortest_path
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -22,8 +24,7 @@ class TrendsetterSelector:
             return random.sample(range(self.simulation.num_agents), num_trendsetters)
 
         return selected_trendsetters
-
-    def select_by_network(self, circle_type="close"):
+    def select_by_network(self,distance_type="close"):
         num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
         agents_sorted_by_degree = self.get_agents_sorted_by_degree()
 
@@ -32,37 +33,26 @@ class TrendsetterSelector:
             return self.select_trendsetters(use_random=True)
 
         high_degree_agents = agents_sorted_by_degree[:len(agents_sorted_by_degree) // 2]
-
         if not high_degree_agents:
             logger.warning("High-degree agent list is empty. Falling back to random selection.")
             return self.select_trendsetters(use_random=True)
 
         trendsetters = []
-        first_trendsetter = random.choice(high_degree_agents)[0]
-        logger.info(f"Selected first trendsetter: {first_trendsetter}")
+        distance_list= {}
+        first_trendsetter = high_degree_agents[0][0]
         trendsetters.append(first_trendsetter)
+        high_degree_agents.remove(high_degree_agents[0])
+        for agent in high_degree_agents:
+            distance_list[agent[0]] = len(shortest_path(self.simulation.topology.graph,first_trendsetter, agent[0]))
 
-        neighbors = list(nx.all_neighbors(self.simulation.topology.graph, first_trendsetter))
-        logger.info(f"First-degree neighbors: {neighbors}")
-
-        if neighbors:
-            random_neighbor = random.choice(neighbors)
-            second_degree_neighbors = list(nx.all_neighbors(self.simulation.topology.graph, random_neighbor))
-            logger.info(f"Second-degree neighbors: {second_degree_neighbors}")
-
-            if circle_type == "close":
-                combined_neighbors = list(set(neighbors + second_degree_neighbors))
-                logger.info(f"Combined close-circle neighbors: {combined_neighbors}")
-            elif circle_type == "far":
-                third_degree_neighbors = list(nx.all_neighbors(self.simulation.topology.graph, random_neighbor))
-                combined_neighbors = third_degree_neighbors
-
-            remaining_count = num_trendsetters - 1
-            selected_neighbors = random.sample(combined_neighbors, min(remaining_count, len(combined_neighbors)))
-            trendsetters.extend(selected_neighbors)
-
+        sorted_distance_list = sorted(distance_list.items(), key=lambda x: x[1], reverse=False)
+        if distance_type == "close":
+            for agent_id, _ in sorted_distance_list[:num_trendsetters - 1]:  # -1 çünkü ilk zaten eklendi
+                trendsetters.append(agent_id)
+        else:
+            for agent_id, _ in sorted_distance_list[::-1][:num_trendsetters - 1]:
+                trendsetters.append(agent_id)
         return trendsetters
-
     def get_agents_sorted_by_degree(self):
         if self.simulation.topology_type not in ["scale_free", "small_world"] or not self.simulation.topology.graph:
             logger.warning("This method is only applicable for scale-free or small-world topologies.")

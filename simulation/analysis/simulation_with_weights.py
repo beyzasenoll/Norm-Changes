@@ -10,7 +10,7 @@ def run_simulations_varying_weights(weight_sets, num_trials=10, num_agents=100, 
             simulation = Simulation(
                 num_agents=num_agents,
                 num_steps=num_steps,
-                topology_type="toroidal",
+                topology_type="random",
                 k=4,
                 p=0.2,
                 beta=0.5,
@@ -53,7 +53,7 @@ def save_results_to_csv(results, filename):
     print(f"Results saved to {filename}")
 
 if __name__ == '__main__':
-    output_file = "outputs/weight_variation_results.csv"
-    weight_sets = [[0, 0, 1], [0, 1, 0], [1, 0, 0]]
+    output_file = "../../outputs/weight_variation_results_random_topology.csv"
+    weight_sets = [[1, 0, 0],[0.5,0.5,0] ,[0, 1, 0]]
     results = run_simulations_varying_weights(weight_sets)
     save_results_to_csv(results, output_file)

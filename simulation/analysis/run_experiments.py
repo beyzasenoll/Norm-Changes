@@ -4,8 +4,8 @@ import pandas as pd
 from simulation.reset_manager import ResetManager
 from simulation.simulation import Simulation
 
-def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent, weight, epsilon,
-                             num_simulations=10, topology_type="toroidal"):
+def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent, weight, epsilon,distance_type,
+                             num_simulations=1, topology_type="scale_free"):
     aa_wins, bb_wins = 0, 0
 
     for sim in range(num_simulations):
@@ -19,7 +19,8 @@ def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_per
             beta=beta,
             trendsetter_percent=trendsetter_percent,
             weights=weight,
-            epsilon=epsilon
+            epsilon=epsilon,
+            distance_type=distance_type
         )
 
         simulation.run_simulation()
@@ -61,47 +62,48 @@ def count_agent_actions(simulation):
     return count_A, count_B
 
 if __name__ == '__main__':
-    df = pd.read_excel("inputs/percentage_b_emerged_100.xlsx")
+    df = pd.read_excel("/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/inputs/calculate_emerge_rate_with_distance_type.xlsx")
     df["Weight"] = df["Weight"].astype(str)
-    output_file = "outputs/percentage_b_emergence_results.csv"
+    output_file = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/calculate_emerge_rate_with_distance_type_results.csv"
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([
-            "A_emerged_count", "B_emerged_count", "Total_emerged", "B_emerged_percentage",
-            "Agent_Number", "Epsilon", "Trendsetter_Percent", "Beta", "Weight"
+            "Agent_Number", "Epsilon", "Trendsetter_Percent", "Beta", "Weight", "Distance_Type","A_emerged_count","B_emerged_count",
+            "Total_emerged","B_emerged_percentage"
+
         ])
 
     for _, row in df.iterrows():
-        agent_sizes = int(row["Agent Number"])
+        agent_sizes = int(row["Agent_Number"])
         epsilon = float(str(row["Epsilon"]).replace(",", "."))
-        trendsetter_percent = int(row["Trendsetter %"])
+        trendsetter_percent = int(row["Trendsetter_Percent"])
         beta = float(str(row["Beta"]).replace(",", "."))
         weight = eval(row["Weight"])
+        distance_type = str(row["Distance_Type"])
 
-        result = run_multiple_simulations(agent_sizes, 1500, 4, 0.2, beta, trendsetter_percent, weight, epsilon)
+        result = run_multiple_simulations(agent_sizes, 1500, 4, 0.2, beta, trendsetter_percent, weight, epsilon,distance_type)
 
         result.update({
             "Agent_Number": agent_sizes,
             "Epsilon": epsilon,
             "Trendsetter_Percent": trendsetter_percent,
             "Beta": beta,
-            "Weight": row["Weight"]
+            "Weight": row["Weight"],
+            "Distance_Type": distance_type
         })
 
         with open(output_file, mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([
-                result["A_emerged_count"],
-                result["B_emerged_count"],
-                result["Total_emerged"],
-                result["B_emerged_percentage"],
                 result["Agent_Number"],
                 result["Epsilon"],
                 result["Trendsetter_Percent"],
                 result["Beta"],
-                result["Weight"]
+                result["Weight"],
+               result["A_emerged_count"],
+                result["B_emerged_count"],
+                result["Total_emerged"],
+                result["B_emerged_percentage"]
             ])
-
-        print(f"Saved result for Agent Number {agent_sizes} to {output_file}")

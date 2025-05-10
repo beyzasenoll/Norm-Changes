@@ -24,6 +24,20 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/outputs/try_100_for_all_topologies_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/try_100_for_all_topologies_results_new.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/outputs/try_100_results.csv">
           <value>
             <Attribute>

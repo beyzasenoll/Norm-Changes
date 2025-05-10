@@ -1,9 +1,6 @@
 import logging
-import random
+from simulation.trendsetter import TrendsetterSelector
 
-
-import networkx as nx
-import numpy as np
 
 from agents.agent import Agent
 from environment.reward import Reward
@@ -19,9 +16,8 @@ class Simulation:
     """
     A simulation environment for agents interacting in a network topology.
     """
-
     def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2,
-                 circle_degree=None, trendsetter_percent=10, epsilon=0.2, weights=None):
+                 circle_degree=None, trendsetter_percent=10, epsilon=0.2, weights=None, distance_type = "close"):
         if circle_degree is None:
             circle_degree = [1, 2, 3]
         if weights is None:
@@ -32,7 +28,8 @@ class Simulation:
         self.num_steps = num_steps
         self.topology_type = topology_type
         self.pairs = None
-        self.agents = [ Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents)
+        self.agents = [
+            Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents)
             for i in range(num_agents)]
 
         self.beta = beta
@@ -42,7 +39,11 @@ class Simulation:
         self.trendsetter_percent = trendsetter_percent
 
         self.topology = Topology(num_agents, topology_type=topology_type, k=k, p=p)
-        self.trendsetter_ids = self._select_trendsetters()
+        self.trendsetter_selector = TrendsetterSelector(self)
+        if self.topology_type in ['small_world', 'scale_free']:
+            self.trendsetter_ids = self.trendsetter_selector.select_by_network(distance_type="close")
+        else:
+            self.trendsetter_ids = self.trendsetter_selector.select_trendsetters_for_toroidal(randomly=False)
         self._apply_trendsetter_q_values()
 
     def run_simulation(self):
@@ -51,8 +52,8 @@ class Simulation:
         Trendsetter agents choose action 'B' only in step 0.
         """
         for step in range(self.num_steps):
-#            if step % 1500 == 0:
-#                logger.info(f"Step {step}: Running simulation step.")
+            #            if step % 1500 == 0:
+            #                logger.info(f"Step {step}: Running simulation step.")
 
             count_AA, count_BB, count_AB, count_BA = 0, 0, 0, 0
             self.pairs = self.topology.form_pairs(self.circle_degree)
@@ -64,7 +65,6 @@ class Simulation:
 
                 agent1 = self.agents[agent1_id]
                 agent2 = self.agents[agent2_id]
-
 
                 action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_epsilon_greedy()
                 action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_epsilon_greedy()
@@ -89,45 +89,8 @@ class Simulation:
 
             self._update_action_counts(count_AA, count_BB, count_AB, count_BA)
 
-#        print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
+        #        print(f"sum of action count", count_AA + count_BB + count_AB + count_BA)
         print(f"Trendsetter olarak seçilen ajan ID'leri: {self.trendsetter_ids}")
-
-    def _select_trendsetters_1(self):
-        num_trendsetters = max(1, int(self.num_agents * self.trendsetter_percent / 100))
-
-        if self.topology_type == "toroidal":
-            width = self.topology.grid_width
-            height = self.topology.grid_height
-            center = np.array([height // 2, width // 2])
-            distances = []
-            for agent_id in range(self.num_agents):
-                pos = np.array(divmod(agent_id, width))
-                dist = np.linalg.norm(center - pos)
-                distances.append((agent_id, dist))
-            sorted_ids = sorted(distances, key=lambda x: x[1])
-            return [agent_id for agent_id, _ in sorted_ids[:num_trendsetters]]
-
-        elif self.topology.graph:
-            centrality = nx.degree_centrality(self.topology.graph)
-            sorted_nodes = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
-            return [node_id for node_id, _ in sorted_nodes[:num_trendsetters]]
-
-        else:  # fallback
-            return random.sample(range(self.num_agents), num_trendsetters)
-
-    def _select_trendsetters(self):
-        num_trendsetters = max(1, int(self.num_agents * self.trendsetter_percent / 100))
-        trendsetters = []
-        if self.topology_type == "toroidal":
-            agent_id = random.sample(range(self.num_agents), 1)[0]
-            for _ in range(num_trendsetters):
-                trendsetters.append(agent_id)
-                agent_id = (agent_id + 1) % self.num_agents
-
-        else:
-            return random.sample(range(self.num_agents), num_trendsetters)
-
-        return trendsetters
 
     def _apply_trendsetter_q_values(self):
         for tid in self.trendsetter_ids:
@@ -169,8 +132,9 @@ class Simulation:
         PlotManager.plot_q_values(self.scores_history, self.num_agents, self.num_steps, self.topology_type)
 
         if self.topology_type == "small_world":
-            PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p,self.trendsetter_ids)
+            PlotManager.plot_agent_actions_graph_small_world(self.agents, self.num_agents, self.k, self.p,
+                                                             self.trendsetter_ids)
         elif self.topology_type == "toroidal":
             PlotManager.plot_agent_actions_graph_toroidal(self.agents, self.trendsetter_ids)
         elif self.topology_type == "scale_free":
-            PlotManager.plot_agent_actions_graph_scale_free(self.agents , self.k, self.trendsetter_ids)
+            PlotManager.plot_agent_actions_graph_scale_free(self.agents, self.k, self.trendsetter_ids)
