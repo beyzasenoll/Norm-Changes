@@ -16,7 +16,7 @@ def save_single_result_to_csv(result, filename):
 def parameter_grid_search(
     agent_sizes, epsilons, trendsetters, betas, weights,
     num_trials=5, num_steps=1500,
-    topology_type="toroidal", k=4, p=0.2,
+    topology_type="random", k=4, p=0.2,
     output_filename=None
 ):
     if output_filename is None:

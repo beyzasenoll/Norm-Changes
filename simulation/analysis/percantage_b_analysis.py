@@ -7,7 +7,7 @@ from simulation.simulation import Simulation
 
 
 def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent, weight, epsilon,
-                             num_simulations=100, topology_type="toroidal"):
+                             num_simulations=1, topology_type="toroidal"):
     aa_wins, bb_wins = 0, 0
 
     for _ in range(num_simulations):
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     # Çıktı dosyası
     output_file = ("/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs"
-                   "/try_100_for_all_topologies_results_new.csv")
+                   "/try_100_random_results_new.csv")
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     # Başlıkları yaz
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         topology_type = str(row["Topology"])
 
         # Simülasyonları çalıştır
-        result = run_multiple_simulations(agent_sizes, 1500, 4, 0.2, beta, trendsetter_percent, weight, epsilon,
+        result = run_multiple_simulations(agent_sizes, 3000, 4, 0.2, beta, trendsetter_percent, weight, epsilon,
                                           topology_type=topology_type)
 
         # Sonuçları dosyaya yaz

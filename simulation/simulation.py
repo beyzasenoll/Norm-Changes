@@ -1,10 +1,11 @@
 import logging
-from simulation.trendsetter import TrendsetterSelector
-
+import random
 
 from agents.agent import Agent
 from environment.reward import Reward
 from environment.topology import Topology
+from simulation.trendsetter.trendsetterSelectionByCloseness import TrendsetterSelectorByCloseness
+from simulation.trendsetter.trendsetterSelectionByDegree import TrendsetterSelectorByDegree
 from visualization.plot_manager import PlotManager
 
 # Configure logger
@@ -17,34 +18,62 @@ class Simulation:
     A simulation environment for agents interacting in a network topology.
     """
     def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2,
-                 circle_degree=None, trendsetter_percent=10, epsilon=0.2, weights=None, distance_type = "close"):
+                 circle_degree=None, trendsetter_percent=10, epsilon=0.2, weights=None,
+                 distance_type="close", trendsetter_choosing_type='by degree'):
+
         if circle_degree is None:
             circle_degree = [1, 2, 3]
         if weights is None:
             weights = [0, 0, 1]
-        self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
-        self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
+
         self.num_agents = num_agents
         self.num_steps = num_steps
         self.topology_type = topology_type
-        self.pairs = None
-        self.agents = [
-            Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents)
-            for i in range(num_agents)]
-
         self.beta = beta
         self.k = k
         self.p = p
         self.circle_degree = circle_degree
         self.trendsetter_percent = trendsetter_percent
+        self.epsilon = epsilon
+        self.weights = weights
+        self.distance_type = distance_type
+        self.trendsetter_choosing_type = trendsetter_choosing_type
 
+        self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
+        self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
+
+        # Agent oluştur
+        self.agents = [
+            Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents)
+            for i in range(num_agents)
+        ]
+
+        # Ağ topolojisini oluştur
         self.topology = Topology(num_agents, topology_type=topology_type, k=k, p=p)
-        self.trendsetter_selector = TrendsetterSelector(self)
-        if self.topology_type in ['small_world', 'scale_free']:
-            self.trendsetter_ids = self.trendsetter_selector.select_by_network(distance_type="close")
+
+        # Trendsetter seçici sınıfını belirle
+        if trendsetter_choosing_type == 'by degree':
+            self.trendsetter_selector = TrendsetterSelectorByDegree(self)
+        elif trendsetter_choosing_type == 'by closeness':
+            self.trendsetter_selector = TrendsetterSelectorByCloseness(self)
         else:
-            self.trendsetter_ids = self.trendsetter_selector.select_trendsetters_for_toroidal(randomly=False)
+            raise ValueError(f"Invalid trendsetter_choosing_type: {trendsetter_choosing_type}")
+
+        # Trendsetter seçim stratejisini uygula
+        if topology_type in ['small_world', 'scale_free']:
+            if trendsetter_choosing_type == 'by degree':
+                self.trendsetter_ids = self.trendsetter_selector.select_by_degree(distance_type=self.distance_type)
+            elif trendsetter_choosing_type == 'by closeness':
+                self.trendsetter_ids = self.trendsetter_selector.get_agents_sorted_by_closeness()
+        elif topology_type == 'toroidal':
+            self.trendsetter_ids = self.trendsetter_selector.select_by_degree_toroidal(use_random=False)
+        else:
+            logger.warning("Unsupported topology type for trendsetter selection. Falling back to random.")
+            self.trendsetter_ids = random.sample(range(self.num_agents), max(1, int(self.num_agents * self.trendsetter_percent / 100)))
+
+        # Trendsetter'lara özel Q-value ata
         self._apply_trendsetter_q_values()
+
 
     def run_simulation(self):
         """

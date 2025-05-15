@@ -1,5 +1,4 @@
 import random
-import networkx as nx
 import logging
 
 from networkx import shortest_path
@@ -7,7 +6,7 @@ from networkx import shortest_path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class TrendsetterSelector:
+class TrendsetterSelectorByDegree:
     def __init__(self, simulation):
         self.simulation = simulation
 
@@ -60,4 +59,4 @@ class TrendsetterSelector:
 
         degree_list = list(self.simulation.topology.graph.degree())
         sorted_agents = sorted(degree_list, key=lambda x: x[1], reverse=True)
-        ret
+        return sorted_agents
