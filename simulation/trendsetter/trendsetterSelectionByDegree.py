@@ -11,7 +11,7 @@ class TrendsetterSelector:
     def __init__(self, simulation):
         self.simulation = simulation
 
-    def select_trendsetters(self, use_random=False):
+    def select_by_degree_toroidal(self, use_random=False):
         num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
         selected_trendsetters = []
 
@@ -24,18 +24,18 @@ class TrendsetterSelector:
             return random.sample(range(self.simulation.num_agents), num_trendsetters)
 
         return selected_trendsetters
-    def select_by_network(self,distance_type="close"):
+    def select_by_degree(self, distance_type="close"):
         num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
         agents_sorted_by_degree = self.get_agents_sorted_by_degree()
 
         if not agents_sorted_by_degree:
             logger.warning("No agents found by degree. Falling back to random selection.")
-            return self.select_trendsetters(use_random=True)
+            return self.select_by_degree_toroidal(use_random=True)
 
         high_degree_agents = agents_sorted_by_degree[:len(agents_sorted_by_degree) // 2]
         if not high_degree_agents:
             logger.warning("High-degree agent list is empty. Falling back to random selection.")
-            return self.select_trendsetters(use_random=True)
+            return self.select_by_degree_toroidal(use_random=True)
 
         trendsetters = []
         distance_list= {}
@@ -60,4 +60,4 @@ class TrendsetterSelector:
 
         degree_list = list(self.simulation.topology.graph.degree())
         sorted_agents = sorted(degree_list, key=lambda x: x[1], reverse=True)
-        return sorted_agents
+        ret
