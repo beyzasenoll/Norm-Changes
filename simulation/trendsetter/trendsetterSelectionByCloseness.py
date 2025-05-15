@@ -21,5 +21,4 @@ class TrendsetterSelectorByCloseness:
         sorted_agents = sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)
 
         trendsetters = [agent_id for agent_id, _ in sorted_agents[:num_trendsetters]]
-        logger.info(f"Selected trendsetters: {trendsetters}")
         return trendsetters

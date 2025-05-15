@@ -3,7 +3,7 @@ from simulation.simulation import Simulation
 
 if __name__ == '__main__':
     num_agents = 49
-    num_steps = 6000
+    num_steps = 60000
     num_simulations = 50
 
     simulation = Simulation(
@@ -17,7 +17,7 @@ if __name__ == '__main__':
         trendsetter_percent=8,
         epsilon=0.2,
         weights=[0, 1, 0],
-        distance_type="close"
+        trendsetter_choosing_type = 'by degree'
     )
     SimulationMultipleRunAnalysis = SimulationMultipleRunAnalysis(simulation)
 

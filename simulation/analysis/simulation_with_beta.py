@@ -3,18 +3,21 @@ import pandas as pd
 import numpy as np
 import os
 
-def run_simulations_varying_beta(weight, beta_values, epsilon=0.15, num_trials=5, num_agents=100, num_steps=1500):
+
+def run_simulations_varying_beta(weight, beta_values, epsilon=0.15, num_trials=5, num_agents=100, num_steps=1500,
+                                 trendsetter_choosing_type='by_degree'):
     results = []
     for beta in beta_values:
         for trial in range(num_trials):
             simulation = Simulation(
                 num_agents=num_agents,
                 num_steps=num_steps,
-                topology_type="toroidal",
+                topology_type="scale_free",
                 k=4,
                 p=0.2,
                 beta=beta,
-                trendsetter_percent=10
+                trendsetter_percent=10,
+                trendsetter_choosing_type=trendsetter_choosing_type
             )
             for agent in simulation.agents:
                 agent.weights = weight
@@ -27,10 +30,12 @@ def run_simulations_varying_beta(weight, beta_values, epsilon=0.15, num_trials=5
                 'Epsilon': epsilon,
                 'Beta': beta,
                 'Trial': trial + 1,
+                'Trendsetter_Type': trendsetter_choosing_type,
                 'Percent_A': count_A,
                 'Percent_B': count_B
             })
     return results
+
 
 def count_agent_actions(simulation, num_agents):
     count_A, count_B = 0, 0
@@ -49,14 +54,23 @@ def count_agent_actions(simulation, num_agents):
     percent_B = (count_B / num_agents) * 100
     return percent_A, percent_B
 
+
 def save_results_to_csv(results, filename):
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     pd.DataFrame(results).to_csv(filename, index=False)
     print(f"Results saved to {filename}")
 
+
 if __name__ == '__main__':
-    output_file = "outputs/beta_variation_results.csv"
-    beta_values = np.round(np.arange(0.2, 0.8, 0.1), 2)
+    output_file = "outputs/beta_variation_results_scale_free.csv"
+    beta_values = np.round(np.arange(0.15, 0.5 + 0.05, 0.05), 2)
     fixed_weight = [0, 0, 1]
-    results = run_simulations_varying_beta(fixed_weight, beta_values)
-    save_results_to_csv(results, output_file)
+
+    all_results = []
+    for trendsetter_type in ['by degree', 'by closeness']:
+        print(f"Running simulations with trendsetter choosing type: {trendsetter_type}")
+        results = run_simulations_varying_beta(fixed_weight, beta_values, trendsetter_choosing_type=trendsetter_type)
+        all_results.extend(results)
+
+    save_results_to_csv(all_results, output_file)
+

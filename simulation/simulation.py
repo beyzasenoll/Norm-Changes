@@ -59,10 +59,9 @@ class Simulation:
         else:
             raise ValueError(f"Invalid trendsetter_choosing_type: {trendsetter_choosing_type}")
 
-        # Trendsetter seçim stratejisini uygula
         if topology_type in ['small_world', 'scale_free']:
             if trendsetter_choosing_type == 'by degree':
-                self.trendsetter_ids = self.trendsetter_selector.select_by_degree(distance_type=self.distance_type)
+                self.trendsetter_ids = self.trendsetter_selector.select_by_degree_highest()
             elif trendsetter_choosing_type == 'by closeness':
                 self.trendsetter_ids = self.trendsetter_selector.get_agents_sorted_by_closeness()
         elif topology_type == 'toroidal':
@@ -71,7 +70,6 @@ class Simulation:
             logger.warning("Unsupported topology type for trendsetter selection. Falling back to random.")
             self.trendsetter_ids = random.sample(range(self.num_agents), max(1, int(self.num_agents * self.trendsetter_percent / 100)))
 
-        # Trendsetter'lara özel Q-value ata
         self._apply_trendsetter_q_values()
 
 

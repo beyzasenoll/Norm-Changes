@@ -23,6 +23,18 @@ class TrendsetterSelectorByDegree:
             return random.sample(range(self.simulation.num_agents), num_trendsetters)
 
         return selected_trendsetters
+    def select_by_degree_highest(self):
+        num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
+        agents_sorted_by_degree = self.get_agents_sorted_by_degree()
+
+        if not agents_sorted_by_degree:
+            logger.warning("No agents found by degree. Falling back to random selection.")
+            return self.select_by_degree_toroidal(use_random=True)
+
+        high_degree_agents = agents_sorted_by_degree[:num_trendsetters]
+        return [agent_id for agent_id, _ in high_degree_agents]
+
+
     def select_by_degree(self, distance_type="close"):
         num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
         agents_sorted_by_degree = self.get_agents_sorted_by_degree()
