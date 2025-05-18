@@ -19,7 +19,7 @@ class Simulation:
     """
     def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2,
                  circle_degree=None, trendsetter_percent=10, epsilon=0.2, weights=None,
-                 distance_type="close", trendsetter_choosing_type='by degree'):
+                 distance_type="close", trendsetter_choosing_type='by degree',window_size = 5):
 
         if circle_degree is None:
             circle_degree = [1, 2, 3]
@@ -44,7 +44,7 @@ class Simulation:
 
         # Agent oluştur
         self.agents = [
-            Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents)
+            Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents , window_size= window_size)
             for i in range(num_agents)
         ]
 

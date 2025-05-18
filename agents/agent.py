@@ -1,5 +1,4 @@
 import numpy as np
-from environment.topology import Topology
 
 
 class Agent:
@@ -27,7 +26,6 @@ class Agent:
         self.gamma = gamma  # Discount factor
         self.epsilon = epsilon  # Exploration rate
         self.temperature = temperature
-        self.last_action = None
         self.num_agents = num_agents
         self.grid_width = int(num_agents**0.5)
         self.grid_height = int(num_agents**0.5)
@@ -135,7 +133,6 @@ class Agent:
             self.temperature *= 0.995  # Update temperature to decrease over time
         probabilities = exp_q_values / np.sum(exp_q_values)
 
-        self.last_action = np.random.choice(self.actions, p=probabilities)
         return np.random.choice(self.actions, p=probabilities)
 
     def choose_action_boltzmann1(self):
@@ -151,7 +148,6 @@ class Agent:
             self.temperature *= 1.5
         probabilities = exp_q_values / np.sum(exp_q_values)
 
-        self.last_action = np.random.choice(self.actions, p=probabilities)
         return np.random.choice(self.actions, p=probabilities)
 
     def choose_action_epsilon_greedy(self):

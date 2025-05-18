@@ -2,14 +2,14 @@ from simulation.analysis.multiple_run_analysis import SimulationMultipleRunAnaly
 from simulation.simulation import Simulation
 
 if __name__ == '__main__':
-    num_agents = 49
-    num_steps = 60000
+    num_agents = 100
+    num_steps = 50000
     num_simulations = 50
 
     simulation = Simulation(
         num_agents=num_agents,
         num_steps=num_steps,
-        topology_type="random",
+        topology_type="scale_free",
         k=4,
         p=0.2,
         beta=0.5,
@@ -17,7 +17,8 @@ if __name__ == '__main__':
         trendsetter_percent=8,
         epsilon=0.2,
         weights=[0, 1, 0],
-        trendsetter_choosing_type = 'by degree'
+        trendsetter_choosing_type = 'by degree',
+        window_size=5
     )
     SimulationMultipleRunAnalysis = SimulationMultipleRunAnalysis(simulation)
 

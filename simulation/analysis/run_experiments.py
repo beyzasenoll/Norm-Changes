@@ -5,7 +5,7 @@ from simulation.reset_manager import ResetManager
 from simulation.simulation import Simulation
 
 def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent,
-                             weight, epsilon, trendsetter_choosing_type, num_simulations=50, topology_type="scale_free"):
+                             weight, epsilon, trendsetter_choosing_type, topology_type, num_simulations=50):
     aa_wins, bb_wins = 0, 0
 
     for _ in range(num_simulations):
@@ -55,23 +55,24 @@ def count_agent_actions(simulation):
     return count_A, count_B
 
 if __name__ == '__main__':
-    df = pd.read_excel("/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/inputs/b_emergence_check_new.xlsx")
+    df = pd.read_excel("/Users/beyzasenol/Desktop/norm-changes-emergence/inputs/b_emergence_check_new.xlsx")
 
     df.columns = df.columns.str.strip().str.replace(" ", "_")
 
     df["Weight"] = df["Weight"].astype(str)
     df["Epsilon"] = df["Epsilon"].astype(float)
 
-    output_file = "/Users/beyzasenol/Desktop/Norm-Emergence/MAS/norm-changes-emergence/outputs/calculate_emerge_rate_with_trendsetter_type_results_scale_free.csv"
+    output_file = "/Users/beyzasenol/Desktop/norm-changes-emergence/outputs/calculate_emerge_rate_with_trendsetter_type_and_weights.csv"
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([
-            "Agent_Number", "Epsilon", "Trendsetter_Percent", "Beta", "Weight", "Trendsetter_Choosing_Type",
+            "Agent_Number", "Epsilon", "Trendsetter_Percent", "Beta", "Weight", "Trendsetter_Choosing_Type", "Topology",
             "A_emerged_count", "B_emerged_count", "Total_emerged", "B_emerged_percentage"
         ])
 
+    # Her satır için simülasyonları çalıştır
     for _, row in df.iterrows():
         result = run_multiple_simulations(
             agent_sizes=int(row["Agent_Number"]),
@@ -82,7 +83,8 @@ if __name__ == '__main__':
             trendsetter_percent=int(row["Trendsetter"]),
             weight=eval(row["Weight"]),
             epsilon=float(row["Epsilon"]),
-            trendsetter_choosing_type=row["Trendsetter_Type"]
+            trendsetter_choosing_type=row["Trendsetter_Type"],
+            topology_type=row["Topology"]
         )
 
         result.update({
@@ -91,7 +93,8 @@ if __name__ == '__main__':
             "Trendsetter_Percent": row["Trendsetter"],
             "Beta": row["Beta"],
             "Weight": row["Weight"],
-            "Trendsetter_Choosing_Type": row["Trendsetter_Type"]
+            "Trendsetter_Choosing_Type": row["Trendsetter_Type"],
+            "Topology": row["Topology"]
         })
 
         with open(output_file, mode='a', newline='') as file:
@@ -103,6 +106,7 @@ if __name__ == '__main__':
                 result["Beta"],
                 result["Weight"],
                 result["Trendsetter_Choosing_Type"],
+                result["Topology"],
                 result["A_emerged_count"],
                 result["B_emerged_count"],
                 result["Total_emerged"],
