@@ -5,13 +5,13 @@ class Agent:
     def __init__(
         self,
         agent_id,
-        alpha=0.05,
+        alpha=0.05, # Q-learning'de öğrenme oranı. Yeni ödül bilgisine ne kadar ağırlık verileceğini belirler.
         gamma=0.95,
         epsilon=0.15,
         temperature=0.1,
         weights=None,
         num_agents=40,
-        observation_beta=0.5,
+        beta=None,
         window_size=10,
         network_graph=None,
         simulation=None
@@ -34,7 +34,7 @@ class Agent:
         self.past_window = {'actions': []}
 
         self.network_graph = network_graph
-        self.observation_beta = observation_beta
+        self.beta = beta
         self.simulation = simulation
 
     def choose_max_utility_action(self):
@@ -79,14 +79,43 @@ class Agent:
             action_ratio = neighbor.compute_experience(action)
             action_frequencies.append(action_ratio)
         return np.mean(action_frequencies) if action_frequencies else 0
-
-
-    def get_observable_neighbors(self):
+    def get_observable_neighbors_old(self):
         "Get observable neighbors based on the agent's position and observation beta."""
         row, col = divmod(self.agent_id, self.grid_width)
         topology = self.simulation.topology
-        neighbors = topology.calculate_beta_distance(row, col, self.grid_height, self.grid_width, self.observation_beta)
+        neighbors = topology.calculate_beta_distance(row, col, self.grid_height, self.grid_width, self.beta)
+        neighbor_ids = [r * self.grid_width + c for r, c in neighbors]
+        print(f"Agent {self.agent_id} observed neighbors: {neighbor_ids}")
+
         return [self.simulation.agents[r * self.grid_width + c] for r, c in neighbors]
+
+    def get_observable_neighbors(self):
+        """
+        Get observable neighbors using topology-aware, beta-scaled distance.
+        """
+        topology = self.simulation.topology
+
+        if self.simulation.topology_type == "toroidal":
+            row, col = divmod(self.agent_id, self.grid_width)
+            neighbors = topology.calculate_beta_distance(
+                row, col,
+                self.grid_height, self.grid_width,
+                self.beta
+            )
+            return [
+                self.simulation.agents[r * self.grid_width + c]
+                for r, c in neighbors
+                if 0 <= r * self.grid_width + c < len(self.simulation.agents)
+            ]
+
+        elif self.simulation.topology_type in ["scale_free", "small_world"]:
+            neighbors = topology.calculate_beta_graph_neighbors(self.agent_id,self.simulation.num_agents, self.beta)
+            #print(neighbors)
+            return [self.simulation.agents[nid] for nid in neighbors]
+
+        else:  # fallback for random or undefined
+            neighbor_ids = topology.get_neighbors(self.agent_id, self.simulation.circle_degree)
+            return [self.simulation.agents[nid] for nid in neighbor_ids]
 
     def compute_experience(self, action):
         """Compute the proportion of times the agent chose a given action in the past window."""

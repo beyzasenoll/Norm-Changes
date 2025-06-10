@@ -1,7 +1,6 @@
 import pandas as pd
 from simulation.reset_manager import ResetManager
 from simulation.simulation import Simulation
-import csv
 
 def run_multiple_simulations(params):
 
