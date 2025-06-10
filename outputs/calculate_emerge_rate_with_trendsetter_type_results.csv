@@ -1,0 +1,9 @@
+Agent_Number,Epsilon,Trendsetter_Percent,Beta,Weight,Trendsetter_Choosing_Type,A_emerged_count,B_emerged_count,Total_emerged,B_emerged_percentage
+100,0.15,10,0.25,"[0, 0, 1]",by degree,0,0,0,0.0
+100,0.15,10,0.3,"[0, 0, 1]",by degree,0,1,1,1.0
+100,0.15,10,0.35,"[0, 0, 1]",by degree,0,1,1,1.0
+100,0.15,10,0.4,"[0, 0, 1]",by degree,0,1,1,1.0
+100,0.15,10,0.45,"[0, 0, 1]",by degree,0,1,1,1.0
+100,0.15,10,0.25,"[0, 0, 1]",by closeness,0,0,0,0.0
+100,0.15,10,0.3,"[0, 0, 1]",by closeness,0,1,1,1.0
+100,0.15,10,0.35,"[0, 0, 1]",by closeness,0,0,0,0.0

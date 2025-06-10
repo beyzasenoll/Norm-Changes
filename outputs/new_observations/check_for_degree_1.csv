@@ -1,0 +1,8 @@
+Agent_Number;Topology;Beta;Circle_Degree;Trendsetter_Percent;Epsilon;Weight;Trendsetter_Choosing_Type;Window_Size;A_emerged_count;B_emerged_count;Total_emerged;B_emerged_percentage;B_emerged_percentage_with_[1,2]
+100;scale_free;0.1;[1];2;0.05;[0, 0, 1];by closeness;5;3;17;20;0.85;0.55
+100;scale_free;0.1;[1];2;0.1;[0, 0, 1];by closeness;5;7;13;20;0.65;0.7
+100;scale_free;0.1;[1];4;0.05;[0, 0, 1];by closeness;5;0;20;20;1.0;1.0
+100;scale_free;0.1;[1];4;0.1;[0, 0, 1];by closeness;5;2;18;20;0.9;0.95
+100;scale_free;0.2;[1];2;0.05;[0, 0, 1];by closeness;5;10;10;20;0.5;0.7
+100;scale_free;0.2;[1];2;0.1;[0, 0, 1];by closeness;5;9;11;20;0.55;0.55
+100;scale_free;0.2;[1];4;0.05;[0, 0, 1];by closeness;5;2;17;19;0.85;1.0

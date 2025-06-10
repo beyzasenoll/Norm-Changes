@@ -1,0 +1,3 @@
+Agent_Number,Topology,Beta,Circle_Degree,Trendsetter_Percent,Epsilon,Weight,Trendsetter_Choosing_Type,Window_Size,A_emerged_count,B_emerged_count,Total_emerged,B_emerged_percentage
+100,scale_free,0.2,"[1, 2]",5,0.1,"[0, 0, 1]",by closeness,5,2,48,50,0.96
+100,small_world,0.2,"[1, 2]",5,0.1,"[0, 0, 1]",by closeness,5,45,5,50,0.1
