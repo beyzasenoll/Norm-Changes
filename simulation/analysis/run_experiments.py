@@ -4,8 +4,10 @@ import pandas as pd
 from simulation.reset_manager import ResetManager
 from simulation.simulation import Simulation
 
+
 def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent,
-                             weight, epsilon, trendsetter_choosing_type, topology_type, num_simulations=50):
+                             weight, epsilon, trendsetter_choosing_type, topology_type, circle_degree, window_size,
+                             num_simulations=20):
     aa_wins, bb_wins = 0, 0
 
     for _ in range(num_simulations):
@@ -17,9 +19,11 @@ def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_per
             p=p,
             beta=beta,
             trendsetter_percent=trendsetter_percent,
+            circle_degree=circle_degree,
             weights=weight,
             epsilon=epsilon,
-            trendsetter_choosing_type=trendsetter_choosing_type
+            trendsetter_choosing_type=trendsetter_choosing_type,
+            window_size=window_size
         )
 
         simulation.run_simulation()
@@ -43,6 +47,7 @@ def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_per
         "B_emerged_percentage": b_emerged_percentage
     }
 
+
 def count_agent_actions(simulation):
     count_A, count_B = 0, 0
     for agent in simulation.agents:
@@ -54,61 +59,74 @@ def count_agent_actions(simulation):
             count_B += 1
     return count_A, count_B
 
+
 if __name__ == '__main__':
-    df = pd.read_excel("/Users/beyzasenol/Desktop/norm-changes-emergence/inputs/b_emergence_check_new.xlsx")
+    input_output_paths = [
+        {
+            "input": "/Users/beyzasenol/Desktop/norm-changes-emergence/inputs/new_observation/check_for_degree_1.xlsx",
+            "output": "/Users/beyzasenol/Desktop/norm-changes-emergence/outputs/new_observations/check_for_degree_1.csv"
+        },
+    ]
 
-    df.columns = df.columns.str.strip().str.replace(" ", "_")
+    for paths in input_output_paths:
+        input_path = paths["input"]
+        output_path = paths["output"]
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    df["Weight"] = df["Weight"].astype(str)
-    df["Epsilon"] = df["Epsilon"].astype(float)
+        df = pd.read_excel(input_path)
+        df.columns = df.columns.str.strip().str.replace(" ", "_")
 
-    output_file = "/Users/beyzasenol/Desktop/norm-changes-emergence/outputs/calculate_emerge_rate_with_trendsetter_type_and_weights.csv"
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-
-    with open(output_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([
-            "Agent_Number", "Epsilon", "Trendsetter_Percent", "Beta", "Weight", "Trendsetter_Choosing_Type", "Topology",
-            "A_emerged_count", "B_emerged_count", "Total_emerged", "B_emerged_percentage"
-        ])
-
-    # Her satır için simülasyonları çalıştır
-    for _, row in df.iterrows():
-        result = run_multiple_simulations(
-            agent_sizes=int(row["Agent_Number"]),
-            num_steps=1500,
-            k=4,
-            p=0.2,
-            beta=float(row["Beta"]),
-            trendsetter_percent=int(row["Trendsetter"]),
-            weight=eval(row["Weight"]),
-            epsilon=float(row["Epsilon"]),
-            trendsetter_choosing_type=row["Trendsetter_Type"],
-            topology_type=row["Topology"]
-        )
-
-        result.update({
-            "Agent_Number": row["Agent_Number"],
-            "Epsilon": row["Epsilon"],
-            "Trendsetter_Percent": row["Trendsetter"],
-            "Beta": row["Beta"],
-            "Weight": row["Weight"],
-            "Trendsetter_Choosing_Type": row["Trendsetter_Type"],
-            "Topology": row["Topology"]
-        })
-
-        with open(output_file, mode='a', newline='') as file:
+        with open(output_path, mode='w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow([
-                result["Agent_Number"],
-                result["Epsilon"],
-                result["Trendsetter_Percent"],
-                result["Beta"],
-                result["Weight"],
-                result["Trendsetter_Choosing_Type"],
-                result["Topology"],
-                result["A_emerged_count"],
-                result["B_emerged_count"],
-                result["Total_emerged"],
-                result["B_emerged_percentage"]
+                "Agent_Number", "Topology", "Beta", "Circle_Degree", "Trendsetter_Percent",
+                "Epsilon", "Weight", "Trendsetter_Choosing_Type", "Window_Size",
+                "A_emerged_count", "B_emerged_count", "Total_emerged", "B_emerged_percentage"
             ])
+
+        for _, row in df.iterrows():
+            result = run_multiple_simulations(
+                agent_sizes=int(row["num_agents"]),
+                num_steps=1500,
+                k=4,
+                p=0.2,
+                beta=float(row["beta"]),
+                trendsetter_percent=int(row["trendsetter_percent"]),
+                weight=eval(str(row["weights"])),
+                epsilon=float(row["epsilon"]),
+                trendsetter_choosing_type=row["trendsetter_choosing_type"],
+                topology_type=row["topology_type"],
+                circle_degree=eval(str(row["circle_degree"])),
+                window_size=int(row["window_size"])
+            )
+
+            result.update({
+                "Agent_Number": row["num_agents"],
+                "Topology": row["topology_type"],
+                "Beta": row["beta"],
+                "Circle_Degree": row["circle_degree"],
+                "Trendsetter_Percent": row["trendsetter_percent"],
+                "Epsilon": row["epsilon"],
+                "Weight": row["weights"],
+                "Trendsetter_Choosing_Type": row["trendsetter_choosing_type"],
+                "Window_Size": row["window_size"]
+            })
+
+            with open(output_path, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([
+                    result["Agent_Number"],
+                    result["Topology"],
+                    result["Beta"],
+                    result["Circle_Degree"],
+                    result["Trendsetter_Percent"],
+                    result["Epsilon"],
+                    result["Weight"],
+                    result["Trendsetter_Choosing_Type"],
+                    result["Window_Size"],
+                    result["A_emerged_count"],
+                    result["B_emerged_count"],
+                    result["Total_emerged"],
+                    result["B_emerged_percentage"]
+                ])
+

@@ -3,20 +3,20 @@ from simulation.simulation import Simulation
 
 if __name__ == '__main__':
     num_agents = 100
-    num_steps = 50000
-    num_simulations = 50
+    num_steps = 1500
+    num_simulations = 15
 
     simulation = Simulation(
         num_agents=num_agents,
         num_steps=num_steps,
-        topology_type="scale_free",
+        topology_type="small_world",
         k=4,
         p=0.2,
-        beta=0.5,
-        circle_degree=[1, 2, 3],
-        trendsetter_percent=8,
+        beta=0.05,
+        circle_degree=[1,2,3],
+        trendsetter_percent=5,
         epsilon=0.2,
-        weights=[0, 1, 0],
+        weights=[0, 0, 1],
         trendsetter_choosing_type = 'by degree',
         window_size=5
     )
@@ -27,5 +27,4 @@ if __name__ == '__main__':
     simulation.run_simulation()
     simulation.plot_simulation_results()
 
-    # SimulationMultipleRunAnalysis.run_multiple_simulations(num_simulations)
-    # agent = Agent(agent_id=0, is_trendsetter=True)
+    #SimulationMultipleRunAnalysis.run_multiple_simulations(num_simulations)

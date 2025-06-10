@@ -22,7 +22,7 @@ class Simulation:
                  distance_type="close", trendsetter_choosing_type='by degree',window_size = 5):
 
         if circle_degree is None:
-            circle_degree = [1, 2, 3]
+            circle_degree = [1, 2]
         if weights is None:
             weights = [0, 0, 1]
 
@@ -44,7 +44,7 @@ class Simulation:
 
         # Agent oluştur
         self.agents = [
-            Agent(i, simulation=self, observation_beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents , window_size= window_size)
+            Agent(i, simulation=self, beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents, window_size= window_size)
             for i in range(num_agents)
         ]
 

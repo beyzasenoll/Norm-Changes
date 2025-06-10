@@ -40,6 +40,36 @@ class Topology:
                 (row, (col - d) % grid_width)
             ])
         return neighbors
+
+    def calculate_beta_graph_neighbors(self,agent_id,num_agents, beta):
+        """
+        Select the closest (in terms of shortest path) neighbors based on beta fraction of total agents.
+        """
+        if self.graph is None:
+            return set()
+
+        # Calculate shortest path lengths from the agent to all others
+        path_lengths = nx.single_source_shortest_path_length(self.graph, agent_id)
+
+        # Remove self-reference
+        path_lengths.pop(agent_id, None)
+
+        if not path_lengths:
+            return set()
+
+        # Sort neighbors by distance (from closest to farthest)
+        sorted_neighbors = sorted(path_lengths.items(), key=lambda x: x[1])
+
+        # Calculate how many neighbors to return based on beta
+        num_neighbors = int(num_agents* beta)
+        if num_neighbors <= 0:
+            return set()
+
+        # Take the closest 'num_neighbors'
+        selected_neighbors = [nid for nid, _ in sorted_neighbors[:num_neighbors]]
+
+        return set(selected_neighbors)
+
     def _get_neighbors_toroidal(self, row, col, degree):
         """
         Get neighbors of a specific degree in a toroidal grid.
@@ -149,7 +179,7 @@ class Topology:
         :return: List of paired agent IDs.
         """
         if allowed_circles is None:
-            allowed_circles = [1, 2, 3]
+            allowed_circles = [1, 2]
 
         pairs = []
         used_agents = set()
@@ -175,7 +205,7 @@ class Topology:
 
 # **Testing the Implementation**
 if __name__ == "__main__":
-    num_agents = 40
+    num_agents = 500
     topology_types = ["random", "toroidal", "small_world", "scale_free"]
 
     for topo in topology_types:

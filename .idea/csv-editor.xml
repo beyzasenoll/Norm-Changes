@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/outputs/calculate_emerge_rate_with_trendsetter_type_and_weights.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/outputs/degree_closeness_difference.csv">
           <value>
             <Attribute>
@@ -18,6 +25,48 @@
           </value>
         </entry>
         <entry key="/outputs/grid_search_b_emergence.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/new_observations/check_for_degree_1.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/new_observations/circle_degree_analysis_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/new_observations/filtered_parameter_combinations_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/new_observations/non_fully_emerged_B_variants_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/new_observations/topology_type_analysis_results.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/outputs/new_observations/window_size_analysis_results.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
