@@ -1,0 +1,17 @@
+num_agents,topology_type,beta,circle_degree,trendsetter_percent,epsilon,weights,trendsetter_choosing_type,window_size
+100,scale_free,0.1,[1],2,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,[1],2,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,[1],4,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,[1],4,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,[1],2,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,[1],2,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,[1],4,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,[1],4,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,"[1,2]",2,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,"[1,2]",2,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,"[1,2]",4,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.1,"[1,2]",4,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,"[1,2]",2,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,"[1,2]",2,0.1,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,"[1,2]",4,0.05,"[0, 0, 1]",by closeness,5
+100,scale_free,0.2,"[1,2]",4,0.1,"[0, 0, 1]",by closeness,5
