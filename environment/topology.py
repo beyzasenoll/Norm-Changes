@@ -61,7 +61,7 @@ class Topology:
         sorted_neighbors = sorted(path_lengths.items(), key=lambda x: x[1])
 
         # Calculate how many neighbors to return based on beta
-        num_neighbors = int(num_agents* beta)
+        num_neighbors = int(num_agents * beta)
         if num_neighbors <= 0:
             return set()
 
@@ -160,17 +160,11 @@ class Topology:
             for degree in allowed_circles:
                 neighbors.update(self._get_neighbors_toroidal(row, col, degree))
             return {r * self.grid_width + c for r, c in neighbors}
-        elif self.topology_type == "small_world":
+        elif self.topology_type in ["scale_free", "small_world"]:
             neighbors = set()
             for degree in allowed_circles:
                 neighbors.update(self._get_neighbors(agent_id, degree))
             return neighbors
-        elif self.topology_type == "scale_free":
-            neighbors = set()
-            for degree in allowed_circles:
-                neighbors.update(self._get_neighbors(agent_id, degree))
-            return neighbors
-
     def form_pairs(self, allowed_circles=None):
         """
         Forms agent pairs based on the selected topology.

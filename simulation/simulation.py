@@ -17,14 +17,9 @@ class Simulation:
     """
     A simulation environment for agents interacting in a network topology.
     """
-    def __init__(self, num_agents, num_steps, topology_type='small_world', beta=0.5, k=4, p=0.2,
+    def __init__(self, num_agents, num_steps, topology_type, beta=0.5, k=4, p=0.2,
                  circle_degree=None, trendsetter_percent=10, epsilon=0.2, weights=None,
                  distance_type="close", trendsetter_choosing_type='by degree',window_size = 5):
-
-        if circle_degree is None:
-            circle_degree = [1, 2]
-        if weights is None:
-            weights = [0, 0, 1]
 
         self.num_agents = num_agents
         self.num_steps = num_steps
@@ -42,27 +37,19 @@ class Simulation:
         self.action_combinations = {'AA': [], 'BB': [], 'AB': [], 'BA': []}
         self.scores_history = [{'A': [], 'B': []} for _ in range(num_agents)]
 
-        # Agent oluştur
         self.agents = [
             Agent(i, simulation=self, beta=beta, epsilon=epsilon, weights=weights, num_agents=num_agents, window_size= window_size)
             for i in range(num_agents)
         ]
 
-        # Ağ topolojisini oluştur
         self.topology = Topology(num_agents, topology_type=topology_type, k=k, p=p)
-
-        # Trendsetter seçici sınıfını belirle
-        if trendsetter_choosing_type == 'by degree':
-            self.trendsetter_selector = TrendsetterSelectorByDegree(self)
-        elif trendsetter_choosing_type == 'by closeness':
-            self.trendsetter_selector = TrendsetterSelectorByCloseness(self)
-        else:
-            raise ValueError(f"Invalid trendsetter_choosing_type: {trendsetter_choosing_type}")
 
         if topology_type in ['small_world', 'scale_free']:
             if trendsetter_choosing_type == 'by degree':
+                self.trendsetter_selector = TrendsetterSelectorByDegree(self)
                 self.trendsetter_ids = self.trendsetter_selector.select_by_degree_highest()
             elif trendsetter_choosing_type == 'by closeness':
+                self.trendsetter_selector = TrendsetterSelectorByCloseness(self)
                 self.trendsetter_ids = self.trendsetter_selector.get_agents_sorted_by_closeness()
         elif topology_type == 'toroidal':
             self.trendsetter_ids = self.trendsetter_selector.select_by_degree_toroidal(use_random=False)
@@ -96,7 +83,6 @@ class Simulation:
                 action1 = 'B' if agent1_id in self.trendsetter_ids else agent1.choose_action_epsilon_greedy()
                 action2 = 'B' if agent2_id in self.trendsetter_ids else agent2.choose_action_epsilon_greedy()
 
-                # Update action counts
                 if action1 == 'A' and action2 == 'A':
                     count_AA += 1
                 elif action1 == 'B' and action2 == 'B':

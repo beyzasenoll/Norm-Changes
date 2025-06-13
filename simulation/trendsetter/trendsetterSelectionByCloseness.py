@@ -16,7 +16,8 @@ class TrendsetterSelectorByCloseness:
             logger.warning("This method is only applicable for scale-free or small-world topologies.")
             return []
 
-        num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
+        num_trendsetters = max(0, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
+        print(num_trendsetters)
         closeness_centrality = nx.closeness_centrality(self.simulation.topology.graph)
         sorted_agents = sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)
 

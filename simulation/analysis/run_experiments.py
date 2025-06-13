@@ -7,7 +7,7 @@ from simulation.simulation import Simulation
 
 def run_multiple_simulations(agent_sizes, num_steps, k, p, beta, trendsetter_percent,
                              weight, epsilon, trendsetter_choosing_type, topology_type, circle_degree, window_size,
-                             num_simulations=20):
+                             num_simulations=50):
     aa_wins, bb_wins = 0, 0
 
     for _ in range(num_simulations):
@@ -63,8 +63,8 @@ def count_agent_actions(simulation):
 if __name__ == '__main__':
     input_output_paths = [
         {
-            "input": "/Users/beyzasenol/Desktop/norm-changes-emergence/inputs/new_observation/check_setting_parametres.xlsx",
-            "output": "/Users/beyzasenol/Desktop/norm-changes-emergence/outputs/new_observations/check_setting_parametres_result.csv"
+            "input": "/Users/beyzasenol/Desktop/norm-changes-emergence/inputs/new_observation/window_size_analysis.xlsx",
+            "output": "/Users/beyzasenol/Desktop/norm-changes-emergence/outputs/new_observations/window_size_analysis_result21.csv"
         },
     ]
 

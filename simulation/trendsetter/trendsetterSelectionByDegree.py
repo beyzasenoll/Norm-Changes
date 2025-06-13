@@ -24,7 +24,7 @@ class TrendsetterSelectorByDegree:
 
         return selected_trendsetters
     def select_by_degree_highest(self):
-        num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
+        num_trendsetters = max(0, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
         agents_sorted_by_degree = self.get_agents_sorted_by_degree()
 
         if not agents_sorted_by_degree:
@@ -33,37 +33,6 @@ class TrendsetterSelectorByDegree:
 
         high_degree_agents = agents_sorted_by_degree[:num_trendsetters]
         return [agent_id for agent_id, _ in high_degree_agents]
-
-
-    def select_by_degree(self, distance_type="close"):
-        num_trendsetters = max(1, int(self.simulation.num_agents * self.simulation.trendsetter_percent / 100))
-        agents_sorted_by_degree = self.get_agents_sorted_by_degree()
-
-        if not agents_sorted_by_degree:
-            logger.warning("No agents found by degree. Falling back to random selection.")
-            return self.select_by_degree_toroidal(use_random=True)
-
-        high_degree_agents = agents_sorted_by_degree[:len(agents_sorted_by_degree) // 2]
-        if not high_degree_agents:
-            logger.warning("High-degree agent list is empty. Falling back to random selection.")
-            return self.select_by_degree_toroidal(use_random=True)
-
-        trendsetters = []
-        distance_list= {}
-        first_trendsetter = high_degree_agents[0][0]
-        trendsetters.append(first_trendsetter)
-        high_degree_agents.remove(high_degree_agents[0])
-        for agent in high_degree_agents:
-            distance_list[agent[0]] = len(shortest_path(self.simulation.topology.graph,first_trendsetter, agent[0]))
-
-        sorted_distance_list = sorted(distance_list.items(), key=lambda x: x[1], reverse=False)
-        if distance_type == "close":
-            for agent_id, _ in sorted_distance_list[:num_trendsetters - 1]:  # -1 çünkü ilk zaten eklendi
-                trendsetters.append(agent_id)
-        else:
-            for agent_id, _ in sorted_distance_list[::-1][:num_trendsetters - 1]:
-                trendsetters.append(agent_id)
-        return trendsetters
     def get_agents_sorted_by_degree(self):
         if self.simulation.topology_type not in ["scale_free", "small_world"] or not self.simulation.topology.graph:
             logger.warning("This method is only applicable for scale-free or small-world topologies.")

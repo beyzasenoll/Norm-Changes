@@ -5,7 +5,7 @@ class Agent:
     def __init__(
         self,
         agent_id,
-        alpha=0.05, # Q-learning'de öğrenme oranı. Yeni ödül bilgisine ne kadar ağırlık verileceğini belirler.
+        alpha=0.01, # Q-learning'de öğrenme oranı
         gamma=0.95,
         epsilon=0.15,
         temperature=0.1,
@@ -36,37 +36,12 @@ class Agent:
         self.network_graph = network_graph
         self.beta = beta
         self.simulation = simulation
-
-    def choose_max_utility_action(self):
-        """Choose the action with the maximum utility."""
-        utilities = {action: self.compute_utility(action) for action in self.actions}
-        max_action = max(utilities, key=utilities.get)
-        return max_action
-
     def compute_utility(self, action):
         """Compute utility for a given action based on Q-values, experience, and social influence."""
         q_val = self.q_values[action]
         e_val = self.compute_experience(action)
         o_val = self.compute_observation_with_past_window(action)
         return self.weights[0] * q_val + self.weights[1] * e_val + self.weights[2] * o_val
-
-    def compute_observations(self, action):
-        """Compute social influence based on the actions of observable neighbors."""
-        neighbors = self.get_observable_neighbors()
-        if not neighbors:
-            return 0
-
-        action_frequencies = []
-        for neighbor in neighbors:
-            last_actions = neighbor.past_window['actions'][-self.window_size:]
-            if last_actions:
-                # Flatten the list of lists to get all actions in the window
-                flattened_actions = [a for sublist in last_actions for a in sublist]
-                action_count = flattened_actions.count(action)
-                action_ratio = action_count / len(flattened_actions) if flattened_actions else 0
-                action_frequencies.append(action_ratio)
-
-        return np.mean(action_frequencies) if action_frequencies else 0
 
     def compute_observation_with_past_window(self, action):
         """Compute social influence based on the actions of observable neighbors."""
@@ -188,4 +163,10 @@ class Agent:
             return np.random.choice(self.actions)  # Explore: Choose a random action
         else:
             utilities = {action: self.compute_utility(action) for action in self.actions}
-            return max(utilities, key=utilities.get)  # Exploit: Choose the best action
+            utility_values = list(utilities.values())
+
+            if all(val == utility_values[0] for val in utility_values):
+                return np.random.choice(self.actions)
+
+            best_action = max(utilities, key=utilities.get)
+            return best_action  # Exploit: Choose the best action
